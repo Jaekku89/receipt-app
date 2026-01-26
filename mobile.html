@@ -7,135 +7,123 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
-    <title>매입매출 관리 (전체 기능)</title>
+    <title>매입매출 전용 관리앱</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 스타일 정의 */
+        /* 통합 스타일 (반응형) */
         :root { --primary: #2c3e50; --blue: #2980b9; --red: #c0392b; --orange: #d35400; --light: #f4f6f8; --border: #dfe6e9; --green: #27ae60; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 15px; background: var(--light); font-size: 14px; color: #333; -webkit-tap-highlight-color: transparent; }
         
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; }
         .header h1 { font-size: 20px; margin: 0; color: var(--primary); }
         
-        .btn { border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; padding: 10px 15px; transition: 0.2s; }
+        .btn { border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; padding: 8px 12px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
         .btn-refresh { background: var(--green); color: white; }
-        
-        /* 입력 폼 스타일 */
-        .input-section { background: #fafbfc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .form-title { font-weight: bold; font-size: 16px; color: var(--primary); }
-        .btn-cancel { background: #95a5a6; color: white; font-size: 12px; display: none; padding: 6px 10px; }
-        
-        /* 2열 그리드 배치 */
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .full-width { grid-column: span 2; }
-        
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
-        .form-control { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; background: white; }
-        .form-control:focus { border-color: var(--primary); outline: none; }
+        .btn-cancel-edit { background: #95a5a6; color: white; margin-left: 10px; display: none; }
 
-        /* 버튼 */
-        .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; }
-        .btn-submit.editing { background: #e67e22; }
+        /* 입력 폼 */
+        .input-section { background: #fafbfc; padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 25px; }
+        .input-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 6px; font-size: 12px; color: #555; }
+        .form-control { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
         
-        /* 카메라 */
-        .camera-wrapper { margin-top: 5px; }
-        .btn-camera { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px; width: 100%; text-align: center; }
-        .btn-camera.active { background: #e8f8f5; border-color: var(--green); color: var(--green); }
-        #preview-area { display: none; text-align: center; margin-top: 10px; position: relative; background: #eee; border-radius: 8px; padding: 5px; }
+        /* 버튼 영역 */
+        .btn-submit { grid-column: span 4; background: var(--primary); color: white; padding: 14px; font-size: 16px; margin-top: 10px; }
+        .btn-submit.editing { background: #e67e22; } /* 수정 중일 때 주황색 */
+
+        /* 카메라/파일 */
+        .camera-wrapper { grid-column: span 4; display: flex; flex-direction: column; gap: 10px; }
+        .btn-camera { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px; text-align: center; width: 100%; }
+        .btn-camera.active { border-color: var(--green); color: var(--green); background: #e8f8f5; }
+        #preview-area { display: none; text-align: center; background: #eaf2f8; padding: 10px; border-radius: 6px; }
         #preview-img { max-height: 200px; max-width: 100%; border-radius: 4px; }
-        .btn-del-img { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 25px; height: 25px; border: none; cursor: pointer; }
 
         /* 테이블 */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { background: #f8f9fa; text-align: left; padding: 10px; font-size: 13px; color: #555; white-space: nowrap; border-bottom: 2px solid #eee; }
-        td { border-bottom: 1px solid #eee; padding: 12px 10px; font-size: 14px; vertical-align: middle; }
+        .table-container { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { background: #f8f9fa; font-weight: 600; color: #444; white-space: nowrap; }
         
-        .col-sales { color: var(--blue); font-weight: bold; }
-        .col-exp { color: var(--red); font-weight: bold; }
-        .receipt-btn { background: #3498db; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; text-decoration: none; display: inline-block; }
+        .col-fixed { color: var(--orange); font-weight: bold; background: #fffdf9; }
+        .col-var { color: var(--red); font-weight: bold; background: #fff5f5; }
+        .col-sales { color: var(--blue); font-weight: bold; background: #f0f9ff; }
         
-        .actions { white-space: nowrap; }
-        .btn-edit { background: #f39c12; color: white; padding: 5px 8px; font-size: 12px; margin-right: 5px; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 12px; }
+        .receipt-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; }
+        .btn-edit { background: #3498db; color: white; padding: 4px 8px; margin-right: 4px; font-size: 11px; }
+        .btn-del { background: #e74c3c; color: white; padding: 4px 8px; font-size: 11px; }
 
         /* 모바일 최적화 */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .container { padding: 15px; }
-            /* 모바일에서 한 줄에 하나씩 보이게 하려면 아래 주석 해제 (지금은 2열 유지) */
-            /* .input-grid { grid-template-columns: 1fr; gap: 15px; } .full-width { grid-column: span 1; } */
-            th, td { padding: 10px 5px; font-size: 13px; }
+            .input-grid { grid-template-columns: 1fr; gap: 15px; }
+            .btn-submit, .camera-wrapper { grid-column: span 1; }
+            th, td { padding: 10px 5px; font-size: 12px; }
         }
 
         /* 로딩 & 모달 */
         .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column; }
         .modal-content { max-width: 95%; max-height: 80%; object-fit: contain; }
-        .close-modal { position: absolute; top: 30px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 20px; }
+        .close-modal { position: absolute; top: 30px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 10px; }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loader-overlay"><div class="spinner"></div><div>처리 중...</div></div>
+<div id="loader" class="loader-overlay"><div class="loader"></div><div id="loader-text">처리 중...</div></div>
 
 <div class="container">
     <div class="header">
         <h1>📊 매입매출 관리</h1>
-        <button class="btn btn-refresh" onclick="loadData()">🔄</button>
+        <button class="btn btn-refresh" onclick="loadData()">🔄 새로고침</button>
     </div>
 
     <div class="input-section">
-        <div class="form-header">
-            <span class="form-title" id="formTitle">📝 신규 등록</span>
-            <button class="btn btn-cancel" id="btnCancel" onclick="cancelEdit()">취소</button>
-        </div>
-        
+        <h3 style="margin-top:0; font-size:16px; border-bottom:1px solid #eee; padding-bottom:10px; display:flex; justify-content:space-between;">
+            <span id="formTitle">📝 신규 등록</span>
+            <button class="btn btn-cancel-edit" id="btnCancelEdit" onclick="cancelEditMode()">취소</button>
+        </h3>
         <div class="input-grid">
             <div class="form-group"><label>날짜</label><input type="date" id="date" class="form-control"></div>
             <div class="form-group"><label>구분</label><select id="moneyType" class="form-control"><option value="variable">지출매입 (-)</option><option value="sales">매출 (+)</option><option value="fixed">고정매입 (-)</option></select></div>
-            
             <div class="form-group"><label>금액 (원)</label><input type="tel" id="amount" placeholder="0" class="form-control"></div>
             <div class="form-group"><label>사용자</label><input type="text" id="user" placeholder="이름" class="form-control"></div>
             
-            <div class="form-group full-width"><label>내역 (아이템)</label><input type="text" id="item" placeholder="예: 점심식사, 자재구입" class="form-control"></div>
-            
-            <div class="form-group"><label>고객사</label><input type="text" id="client" placeholder="거래처명" class="form-control"></div>
-            <div class="form-group"><label>장소</label><input type="text" id="location" placeholder="사용 장소" class="form-control"></div>
+            <div class="form-group"><label>아이템</label><input type="text" id="item" placeholder="품목" class="form-control"></div>
+            <div class="form-group"><label>상세 내용</label><input type="text" id="detail" placeholder="내용" class="form-control"></div>
+            <div class="form-group"><label>고객사</label><input type="text" id="client" placeholder="거래처" class="form-control"></div>
+            <div class="form-group"><label>장소</label><input type="text" id="location" placeholder="장소" class="form-control"></div>
             
             <div class="form-group"><label>형태</label><select id="payType" class="form-control"><option value="카드영수증">카드영수증</option><option value="계산서발행">계산서발행</option><option value="송금">송금</option><option value="현금">현금</option></select></div>
-            <div class="form-group"><label>카드번호</label><input type="text" id="cardNo" placeholder="번호 (4자리)" class="form-control"></div>
-            
-            <div class="form-group full-width"><label>상세설명</label><input type="text" id="detail" placeholder="추가 설명 (선택)" class="form-control"></div>
+            <div class="form-group"><label>카드번호</label><input type="text" id="cardNo" placeholder="번호" class="form-control"></div>
 
-            <div class="camera-wrapper full-width">
-                <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button class="btn btn-camera" id="btnCam" onclick="document.getElementById('fileInput').click()">📷 영수증 촬영 / 사진 선택</button>
+            <div class="camera-wrapper">
+                <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="handleFileSelect(this)">
+                <button class="btn btn-camera" id="btnCam" onclick="document.getElementById('fileInput').click()">📷 영수증 촬영 / 파일 선택</button>
                 <div id="preview-area">
                     <img id="preview-img" src="">
-                    <button class="btn-del-img" onclick="clearImg()">×</button>
+                    <button class="btn" onclick="clearPreview()" style="margin-top:5px; border:1px solid #ccc; background:white;">이미지 삭제</button>
                 </div>
             </div>
 
-            <button class="btn btn-submit full-width" id="btnSubmit" onclick="submitData()">등록하기</button>
+            <button onclick="submitData()" id="btnSubmit" class="btn btn-submit">등록하기</button>
         </div>
     </div>
 
-    <div class="table-wrapper">
+    <div class="table-container">
         <table id="dataTable">
             <thead>
                 <tr>
                     <th>날짜</th>
-                    <th>내역</th>
+                    <th>구분</th>
                     <th>금액</th>
-                    <th>고객사</th>
+                    <th>내용</th>
+                    <th>사용자</th>
                     <th>영수증</th>
                     <th>관리</th>
                 </tr>
@@ -151,13 +139,13 @@
 </div>
 
 <script>
-    // ★★★ [중요] 여기에 구글 스크립트 '웹 앱 URL'을 넣으세요 ★★★
-    const SERVER_URL = "https://script.google.com/macros/s/AKfycbzpwCOQU7H9CZCq3PRAlwnA-gK_UIH0Olfvpvo5UXfQMfQplpwAd55JS9_gnFCoartcVA/exec";
+    // ★★★ 주소를 꼭 넣어주세요 ★★★
+    const SERVER_URL = "https://script.google.com/macros/s/AKfycbzpwCOQU7H9CZCq3PRAlwnA-gK_UIH0Olfvpvo5UXfQMfQplpwAd55JS9_gnFCoartcVA/exec"; 
 
     let db = [];
     let currentImgBase64 = null;
-    let isEditing = false;
-    let editId = null;
+    let isEditing = false; // 수정 모드인지 체크
+    let editId = null; // 수정 중인 데이터 ID
 
     window.onload = function() {
         document.getElementById('date').valueAsDate = new Date();
@@ -171,40 +159,39 @@
         .then(res => res.json())
         .then(data => {
             db = data;
-            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); // 최신순
+            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜));
             renderTable();
             showLoader(false);
         })
         .catch(err => { alert("로드 실패: " + err); showLoader(false); });
     }
 
+    // 등록 또는 수정 버튼 클릭 시
     function submitData() {
-        // 필수값 체크
         const date = document.getElementById('date').value;
         const amount = document.getElementById('amount').value;
         const item = document.getElementById('item').value;
 
-        if(!date || !amount || !item) { alert("날짜, 금액, 내역은 필수입니다."); return; }
+        if(!date || !amount || !item) { alert("날짜, 금액, 아이템은 필수입니다."); return; }
 
-        // 데이터 객체 생성 (모든 필드 포함)
         const entry = {
-            id: isEditing ? editId : Date.now(),
+            id: isEditing ? editId : Date.now(), // 수정이면 기존 ID 유지
             date: date,
             moneyType: document.getElementById('moneyType').value,
             amount: amount,
             user: document.getElementById('user').value,
             item: item,
-            client: document.getElementById('client').value, // 고객사
-            location: document.getElementById('location').value, // 장소
-            payType: document.getElementById('payType').value, // 형태
-            cardNo: document.getElementById('cardNo').value, // 카드번호
+            client: document.getElementById('client').value,
+            location: document.getElementById('location').value,
+            payType: document.getElementById('payType').value,
             detail: document.getElementById('detail').value,
-            img: currentImgBase64
+            cardNo: document.getElementById('cardNo').value,
+            img: currentImgBase64 // 이미지 변경 없으면 null (서버가 알아서 처리)
         };
 
-        // 수정 모드면 update, 아니면 기본 저장
+        // 수정 모드면 action=update, 아니면 기본(append)
         const url = isEditing ? (SERVER_URL + "?action=update") : SERVER_URL;
-
+        
         showLoader(true);
         fetch(url, {
             method: "POST",
@@ -214,15 +201,15 @@
         })
         .then(() => {
             alert(isEditing ? "✅ 수정되었습니다." : "✅ 등록되었습니다.");
-            cancelEdit(); // 폼 초기화
-            loadData();   // 목록 갱신
+            cancelEditMode(); // 폼 초기화
+            loadData();
         })
-        .catch(err => { alert("오류: " + err); showLoader(false); });
+        .catch(err => { alert("오류 발생: " + err); showLoader(false); });
     }
 
-    // 수정 버튼 클릭 시 폼에 채우기
+    // 수정 버튼 눌렀을 때 (폼에 데이터 채우기)
     function editRow(id) {
-        const item = db.find(row => row.ID == id);
+        const item = db.find(row => row.ID == id); // ID는 숫자/문자 주의
         if(!item) return;
 
         isEditing = true;
@@ -234,43 +221,44 @@
         document.getElementById('amount').value = item.금액;
         document.getElementById('user').value = item.사용자;
         document.getElementById('item').value = item.아이템;
-        document.getElementById('detail').value = item.상세내용;
-        // 추가된 필드 채우기
         document.getElementById('client').value = item.고객사;
         document.getElementById('location').value = item.장소;
         document.getElementById('payType').value = item.형태;
+        document.getElementById('detail').value = item.상세내용;
         document.getElementById('cardNo').value = item.카드번호;
 
         // UI 변경
-        document.getElementById('formTitle').innerText = "✏️ 내역 수정 중";
-        document.getElementById('formTitle').style.color = "#e67e22";
-        document.getElementById('btnSubmit').innerText = "수정 완료";
+        document.getElementById('formTitle').innerText = "✏️ 내역 수정 중...";
+        document.getElementById('btnSubmit').innerText = "수정 내용 저장";
         document.getElementById('btnSubmit').classList.add('editing');
-        document.getElementById('btnCancel').style.display = 'block';
-        document.getElementById('btnCam').innerText = "📷 사진 변경 (선택)";
-
+        document.getElementById('btnCancelEdit').style.display = 'block';
+        document.getElementById('btnCam').innerText = "📷 사진 변경 (선택사항)";
+        
+        // 스크롤을 맨 위로 (입력창으로)
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function cancelEdit() {
+    // 수정 취소 / 초기화
+    function cancelEditMode() {
         isEditing = false;
         editId = null;
         currentImgBase64 = null;
         
-        // 모든 입력창 초기화
-        const ids = ['amount', 'item', 'detail', 'user', 'client', 'location', 'cardNo'];
-        ids.forEach(id => document.getElementById(id).value = '');
+        document.getElementById('amount').value = '';
+        document.getElementById('item').value = '';
+        document.getElementById('detail').value = '';
+        document.getElementById('user').value = '';
+        document.getElementById('client').value = '';
+        // 날짜는 오늘 날짜로 리셋
         document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('payType').value = '카드영수증';
-        
-        clearImg();
+
+        clearPreview();
 
         // UI 복구
         document.getElementById('formTitle').innerText = "📝 신규 등록";
-        document.getElementById('formTitle').style.color = "#2c3e50";
         document.getElementById('btnSubmit').innerText = "등록하기";
         document.getElementById('btnSubmit').classList.remove('editing');
-        document.getElementById('btnCancel').style.display = 'none';
+        document.getElementById('btnCancelEdit').style.display = 'none';
     }
 
     function delEntry(id) {
@@ -278,38 +266,46 @@
         showLoader(true);
         fetch(SERVER_URL + "?action=delete&id=" + id)
         .then(res => res.json())
-        .then(() => { alert("삭제되었습니다."); loadData(); })
-        .catch(() => { alert("오류"); showLoader(false); });
+        .then(data => {
+            if(data.result==="success") { alert("삭제 완료"); loadData(); }
+            else { alert("삭제 실패"); showLoader(false); }
+        })
+        .catch(err => { alert("오류"); showLoader(false); });
     }
 
+    // 테이블 렌더링
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
 
         db.forEach(item => {
-            const val = parseInt(item.금액).toLocaleString();
-            const dateShort = item.날짜.substring(5, 10); // MM-DD
-            const typeClass = item.구분 === 'sales' ? 'col-sales' : 'col-exp';
-            const clientName = item.고객사 || '-';
+            const val = parseInt(item.금액)||0;
+            const tr = document.createElement('tr');
             
-            // 이미지 버튼
+            // 날짜 (YYYY-MM-DD)
+            let dShort = item.날짜 ? item.날짜.toString().substring(0,10) : '-';
+            
+            // 이미지 썸네일
             let imgBtn = `<span style="color:#ccc">-</span>`;
             if(item.이미지URL && item.이미지URL.includes('drive.google.com')) {
                 const idMatch = item.이미지URL.match(/id=([^&]+)/);
                 if(idMatch) {
-                    const thumb = `https://drive.google.com/thumbnail?sz=w1000&id=${idMatch[1]}`;
-                    imgBtn = `<a href="#" class="receipt-btn" onclick="openImageModal('${thumb}')">보기</a>`;
+                    let thumb = `https://drive.google.com/thumbnail?sz=w1000&id=${idMatch[1]}`;
+                    imgBtn = `<img src="${thumb}" class="receipt-thumb" onclick="openImageModal('${thumb}')">`;
                 }
             }
 
-            const tr = document.createElement('tr');
+            // 스타일
+            let moneyClass = item.구분==='sales' ? 'col-sales' : (item.구분==='fixed' ? 'col-fixed' : 'col-var');
+
             tr.innerHTML = `
-                <td>${dateShort}</td>
-                <td>${item.아이템}<br><span style="font-size:11px; color:#888">${item.사용자}</span></td>
-                <td class="${typeClass}">${val}</td>
-                <td style="font-size:12px;">${clientName}</td>
+                <td>${dShort}</td>
+                <td>${item.구분==='sales'?'매출':(item.구분==='fixed'?'고정':'지출')}</td>
+                <td class="${moneyClass}">${val.toLocaleString()}</td>
+                <td style="text-align:left">${item.아이템}<br><small style="color:#888">${item.상세내용||''}</small></td>
+                <td>${item.사용자||'-'}</td>
                 <td>${imgBtn}</td>
-                <td class="actions">
+                <td>
                     <button class="btn btn-edit" onclick="editRow('${item.ID}')">수정</button>
                     <button class="btn btn-del" onclick="delEntry('${item.ID}')">삭제</button>
                 </td>
@@ -318,7 +314,8 @@
         });
     }
 
-    function handleFile(input) {
+    // 파일 처리
+    function handleFileSelect(input) {
         if(input.files[0]) {
             showLoader(true);
             const reader = new FileReader();
@@ -326,19 +323,19 @@
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = () => {
-                    const cvs = document.createElement('canvas');
-                    const ctx = cvs.getContext('2d');
-                    const maxW = 800;
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxWidth = 800;
                     let w = img.width, h = img.height;
-                    if(w > maxW) { h *= maxW/w; w = maxW; }
-                    cvs.width = w; cvs.height = h;
+                    if(w > maxWidth) { h *= maxWidth/w; w = maxWidth; }
+                    canvas.width = w; canvas.height = h;
                     ctx.drawImage(img,0,0,w,h);
-                    currentImgBase64 = cvs.toDataURL('image/jpeg', 0.7);
+                    currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7);
                     
                     document.getElementById('preview-img').src = currentImgBase64;
                     document.getElementById('preview-area').style.display = 'block';
-                    document.getElementById('btnCam').classList.add('active');
                     document.getElementById('btnCam').innerText = "✅ 사진 준비됨";
+                    document.getElementById('btnCam').classList.add('active');
                     showLoader(false);
                 }
             };
@@ -346,21 +343,17 @@
         }
     }
 
-    function clearImg() {
+    function clearPreview() {
         currentImgBase64 = null;
         document.getElementById('preview-area').style.display = 'none';
         document.getElementById('fileInput').value = '';
+        document.getElementById('btnCam').innerText = "📷 영수증 촬영 / 파일 선택";
         document.getElementById('btnCam').classList.remove('active');
-        document.getElementById('btnCam').innerText = "📷 영수증 촬영 / 사진 선택";
     }
 
     function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
-    function openImageModal(url) { 
-        document.getElementById('imageModal').style.display = 'flex'; 
-        document.getElementById('modalImg').src = url; 
-    }
+    function openImageModal(url) { document.getElementById('imageModal').style.display = 'flex'; document.getElementById('modalImg').src = url; }
 </script>
 
 </body>
 </html>
-
