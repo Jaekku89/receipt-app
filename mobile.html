@@ -140,7 +140,7 @@
 
 <script>
     // ★★★ 주소를 꼭 넣어주세요 ★★★
-    const SERVER_URL = "https://script.google.com/macros/s/AKfycbzpwCOQU7H9CZCq3PRAlwnA-gK_UIH0Olfvpvo5UXfQMfQplpwAd55JS9_gnFCoartcVA/exec"; 
+    const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec"; 
 
     let db = [];
     let currentImgBase64 = null;
@@ -153,7 +153,7 @@
     };
 
     function loadData() {
-        if(SERVER_URL.includes("여기에")) { alert("https://script.google.com/macros/s/AKfycbzpwCOQU7H9CZCq3PRAlwnA-gK_UIH0Olfvpvo5UXfQMfQplpwAd55JS9_gnFCoartcVA/exec"); return; }
+        if(SERVER_URL.includes("여기에")) { alert("https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec"); return; }
         showLoader(true);
         fetch(SERVER_URL + "?action=read")
         .then(res => res.json())
@@ -357,3 +357,4 @@
 
 </body>
 </html>
+
