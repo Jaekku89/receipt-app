@@ -90,11 +90,13 @@
             <div class="form-group full-width"><label>상세설명</label><input type="text" id="detail" placeholder="추가 설명 (선택)" class="form-control"></div>
 
             <div class="camera-wrapper full-width">
-                <input type="file" id="cameraInput" accept="image/*" style="display:none" onchange="handleFile(this)">
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+                
                 <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
 
                 <div class="camera-buttons" id="btnArea">
-                    <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 사진 추가</button>
+                    <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
+                    <button class="btn-cam-action" id="btnGal" onclick="document.getElementById('galleryInput').click()" style="background:#fff3cd; color:#d35400; border-color:#f1c40f;">📂 앨범 선택</button>
                 </div>
 
                 <div id="preview-area">
@@ -280,7 +282,11 @@
     function editRow(id) {
         const item = db.find(row => row.ID == id);
         if(!item) return;
-        isEditing = true; editId = id;
+
+        isEditing = true;
+        editId = id;
+
+        // 기존 데이터 채워넣기
         document.getElementById('date').value = getSafeDate(item.날짜).full;
         document.getElementById('moneyType').value = item.구분;
         document.getElementById('amount').value = item.금액;
@@ -291,22 +297,47 @@
         document.getElementById('location').value = item.장소;
         document.getElementById('payType').value = item.형태;
         document.getElementById('cardNo').value = item.카드번호;
-        document.getElementById('formTitle').innerText = "✏️ 수정 중";
+
+        // 디자인 변경 (수정 모드)
+        document.getElementById('formTitle').innerText = "✏️ 내역 수정 중";
+        document.getElementById('formTitle').style.color = "#e67e22";
         document.getElementById('btnSubmit').innerText = "수정 완료";
         document.getElementById('btnSubmit').classList.add('editing');
         document.getElementById('btnCancel').style.display = 'block';
-        window.scrollTo(0,0);
+        
+        // ★★★ [중요] 버튼 글씨 변경 (수정할 때도 카메라 쓰라고) ★★★
+        document.getElementById('btnCam').innerText = "📷 촬영 변경";
+        document.getElementById('btnGal').innerText = "📂 앨범 변경";
+        
+        // 만약 기존 사진이 있으면 미리보기를 보여줄 수도 있지만, 
+        // 일단은 새로 찍을 수 있게 초기화 상태로 둡니다.
+        clearImg(); 
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
     function cancelEdit() {
-        isEditing = false; editId = null; currentImgBase64 = null;
+        isEditing = false;
+        editId = null;
+        currentImgBase64 = null;
+        
         const ids = ['amount', 'item', 'detail', 'user', 'client', 'location', 'cardNo'];
         ids.forEach(id => document.getElementById(id).value = '');
         document.getElementById('date').valueAsDate = new Date();
-        clearImg();
+        document.getElementById('payType').value = '카드영수증';
+        
+        clearImg(); // 사진 미리보기 삭제
+
+        // 디자인 원상복구 (신규 모드)
         document.getElementById('formTitle').innerText = "📝 신규 등록";
+        document.getElementById('formTitle').style.color = "#2c3e50";
         document.getElementById('btnSubmit').innerText = "등록하기";
         document.getElementById('btnSubmit').classList.remove('editing');
         document.getElementById('btnCancel').style.display = 'none';
+        
+        // ★★★ [중요] 버튼 글씨 원상복구 ★★★
+        document.getElementById('btnCam').innerText = "📷 바로 촬영";
+        document.getElementById('btnGal').innerText = "📂 앨범 선택";
     }
     function delEntry(id) {
         if(!confirm("삭제하시겠습니까?")) return;
@@ -355,3 +386,4 @@
 
 </body>
 </html>
+
