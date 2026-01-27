@@ -106,16 +106,18 @@
 
             <div class="camera-wrapper full-width">
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
-                <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
                 
-                <div class="camera-buttons">
-                    <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
-                    <button class="btn-cam-action" id="btnGal" onclick="document.getElementById('galleryInput').click()">📂 앨범 선택</button>
+                <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
+
+                <div class="camera-buttons" id="btnArea">
+                    <button class="btn btn-camera" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
+                    <button class="btn btn-camera" onclick="document.getElementById('galleryInput').click()" style="margin-top:5px; background:#f1c40f; color:white; border:none;">📂 앨범 선택</button>
                 </div>
 
-                <div id="preview-area">
-                    <img id="preview-img" src="">
-                    <button class="btn-del-img" onclick="clearImg()">×</button>
+                <div id="preview-area" style="display:none; text-align:center; margin-top:10px; position:relative;">
+                    <img id="preview-img" src="" style="max-width:100%; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                    <button class="btn-del-img" onclick="clearImg()" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:50%; width:25px; height:25px; font-weight:bold; cursor:pointer;">×</button>
+                    <div style="margin-top:5px; color:green; font-weight:bold;">✅ 사진 준비 완료</div>
                 </div>
             </div>
 
@@ -318,46 +320,67 @@
         });
     }
 
+    // ★★★ 이 코드를 스크립트(<script>) 부분에 복사해 넣으세요 ★★★
+
     function handleFile(input) {
-        if(input.files[0]) {
-            showLoader(true);
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const cvs = document.createElement('canvas');
-                    const ctx = cvs.getContext('2d');
-                    const maxW = 800;
-                    let w = img.width, h = img.height;
-                    if(w > maxW) { h *= maxW/w; w = maxW; }
-                    cvs.width = w; cvs.height = h;
-                    ctx.drawImage(img,0,0,w,h);
-                    currentImgBase64 = cvs.toDataURL('image/jpeg', 0.7);
-                    
-                    document.getElementById('preview-img').src = currentImgBase64;
-                    document.getElementById('preview-area').style.display = 'block';
-                    
-                    // 어떤 버튼을 눌렀는지에 따라 활성화 표시
-                    document.querySelectorAll('.btn-cam-action').forEach(b => b.classList.remove('active'));
-                    if(input.id === 'cameraInput') document.getElementById('btnCam').classList.add('active');
-                    else document.getElementById('btnGal').classList.add('active');
-                    
-                    showLoader(false);
+        if(input.files && input.files[0]) {
+            showLoader(true); // 로딩 시작
+            
+            const file = input.files[0];
+            const img = new Image();
+            
+            // 1. 메모리를 아끼기 위해 파일 주소만 따옵니다.
+            img.src = URL.createObjectURL(file);
+            
+            img.onload = function() {
+                const cvs = document.createElement('canvas');
+                const ctx = cvs.getContext('2d');
+                
+                // 2. 가로/세로 중 긴 쪽을 800px로 줄입니다 (안드로이드 용량 폭발 방지)
+                const maxDim = 800; 
+                let w = img.width;
+                let h = img.height;
+
+                if (w > h) {
+                    if (w > maxDim) { h *= maxDim / w; w = maxDim; }
+                } else {
+                    if (h > maxDim) { w *= maxDim / h; h = maxDim; }
                 }
-            };
-            reader.readAsDataURL(input.files[0]);
+                
+                cvs.width = w; cvs.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                // 3. 화질을 60%로 압축해서 저장
+                currentImgBase64 = cvs.toDataURL('image/jpeg', 0.6);
+                
+                // 4. 화면 처리: 버튼들은 숨기고, 미리보기 사진을 보여줍니다.
+                document.getElementById('preview-img').src = currentImgBase64;
+                
+                document.getElementById('btnArea').style.display = 'none'; // 버튼 숨기기
+                document.getElementById('preview-area').style.display = 'block'; // 사진 보여주기
+                
+                // 메모리 해제
+                URL.revokeObjectURL(img.src);
+                showLoader(false);
+            }
+            
+            img.onerror = function() {
+                alert("사진 처리 실패. 다시 시도해주세요.");
+                showLoader(false);
+            }
         }
     }
 
     function clearImg() {
+        // 사진 삭제 버튼을 눌렀을 때 초기화
         currentImgBase64 = null;
-        document.getElementById('preview-area').style.display = 'none';
+        document.getElementById('preview-area').style.display = 'none'; // 사진 숨기기
+        document.getElementById('btnArea').style.display = 'block';     // 버튼 다시 보이기
+        
+        // 카메라, 앨범 입력창 모두 비우기
         document.getElementById('cameraInput').value = '';
         document.getElementById('galleryInput').value = '';
-        document.querySelectorAll('.btn-cam-action').forEach(b => b.classList.remove('active'));
     }
-
     function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
     function openImageModal(url) { 
         document.getElementById('imageModal').style.display = 'flex'; 
@@ -367,3 +390,4 @@
 
 </body>
 </html>
+
