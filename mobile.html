@@ -6,9 +6,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
-    <title>매입매출 (안드로이드 호환모드)</title>
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
+    <title>매입매출 (안드로이드 최종)</title>
     <style>
-        /* 기존 디자인 그대로 유지 */
+        /* 디자인은 기존 그대로 유지 */
         :root { --primary: #2c3e50; --blue: #2980b9; --red: #c0392b; --orange: #d35400; --light: #f4f6f8; --border: #dfe6e9; --green: #27ae60; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 15px; background: var(--light); font-size: 14px; color: #333; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -44,7 +45,6 @@
         .col-sales { color: var(--blue); font-weight: bold; }
         .col-exp { color: var(--red); font-weight: bold; }
         .receipt-btn { background: #3498db; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; text-decoration: none; display: inline-block; }
-        
         .actions { white-space: nowrap; }
         .btn-edit { background: #f39c12; color: white; padding: 5px 8px; font-size: 12px; margin-right: 5px; }
         .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 12px; }
@@ -52,7 +52,6 @@
         .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column; }
         .modal-content { max-width: 95%; max-height: 80%; object-fit: contain; }
         .close-modal { position: absolute; top: 30px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 20px; }
@@ -91,7 +90,6 @@
 
             <div class="camera-wrapper full-width">
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
-                
                 <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
 
                 <div class="camera-buttons" id="btnArea">
@@ -133,7 +131,7 @@
 </div>
 
 <script>
-    // ★★★ 사장님의 구글 스크립트 URL ★★★
+    // ★★★ 사장님의 구글 스크립트 주소 확인 ★★★
     const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec";
 
     let db = [];
@@ -159,26 +157,25 @@
         .catch(err => { alert("로드 실패: " + err); showLoader(false); });
     }
 
-    // ★★★ [중요] 안드로이드 호환성을 위한 파일 처리 함수 (FileReader 사용) ★★★
+    // ★★★ [초안전 모드] 파일 처리 함수 ★★★
+    // 1. 안전한 FileReader 사용
+    // 2. 크기 500px 제한 (영수증 식별 가능 마지노선)
+    // 3. 화질 40% (전송 실패 방지)
     function handleFile(input) {
         if(input.files && input.files[0]) {
-            alert("1. 파일이 선택되었습니다. 처리를 시작합니다."); // 디버깅 알림 1
-            showLoader(true, "사진 처리 중...");
+            showLoader(true, "사진 압축 중...");
             
             const file = input.files[0];
             const reader = new FileReader();
 
-            // 파일 읽기가 완료되면 실행되는 부분
             reader.onload = function(e) {
-                // alert("2. 파일을 읽었습니다. 이미지로 변환합니다."); // 필요시 주석 해제
-
                 const img = new Image();
                 img.onload = function() {
                     const cvs = document.createElement('canvas');
                     const ctx = cvs.getContext('2d');
                     
-                    // 안드로이드를 위한 안전 크기 (600px)
-                    const maxDim = 600; 
+                    // [핵심] 안드로이드 메모리 보호를 위해 500px로 강력 제한
+                    const maxDim = 500; 
                     let w = img.width;
                     let h = img.height;
 
@@ -191,32 +188,17 @@
                     cvs.width = w; cvs.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // 화질 50%로 압축
-                    currentImgBase64 = cvs.toDataURL('image/jpeg', 0.5);
+                    // [핵심] 화질 40%로 설정 (안정성 최우선)
+                    currentImgBase64 = cvs.toDataURL('image/jpeg', 0.4);
                     
-                    alert("✅ 사진 준비 완료! (크기: " + w + "x" + h + ")"); // 성공 알림
-
                     document.getElementById('preview-img').src = currentImgBase64;
-                    document.getElementById('btnArea').style.display = 'none';
-                    document.getElementById('preview-area').style.display = 'block';
+                    document.getElementById('btnArea').style.display = 'none'; // 버튼 숨김
+                    document.getElementById('preview-area').style.display = 'block'; // 사진 표시
                     
                     showLoader(false);
                 };
-
-                img.onerror = function() {
-                    alert("❌ 이미지 변환 실패. 다른 사진을 써보세요.");
-                    showLoader(false);
-                };
-
-                img.src = e.target.result; // 읽은 데이터를 이미지에 넣기
+                img.src = e.target.result;
             };
-
-            reader.onerror = function() {
-                alert("❌ 파일 읽기 실패 (권한 문제일 수 있습니다)");
-                showLoader(false);
-            };
-
-            // 파일을 읽기 시작
             reader.readAsDataURL(file);
         }
     }
@@ -247,7 +229,6 @@
 
         showLoader(true, "서버로 전송 중...");
         
-        // CORS 문제 해결을 위해 text/plain 사용
         fetch(url, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -256,7 +237,7 @@
         .then(res => res.json())
         .then(data => {
             if(data.result === "success") {
-                alert("✅ 처리 완료!");
+                alert(isEditing ? "✅ 수정 성공!" : "✅ 등록 성공!");
                 cancelEdit();
                 loadData();
             } else {
@@ -270,23 +251,12 @@
         });
     }
 
-    // (나머지 함수들은 그대로 유지)
-    function getSafeDate(dateStr) {
-        if(!dateStr) return { full: "", short: "" };
-        const d = new Date(dateStr);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return { full: `${year}-${month}-${day}`, short: `${month}-${day}` };
-    }
+    // ★★★ [수정 모드] 버튼 글씨 바꾸기 로직 복구 ★★★
     function editRow(id) {
         const item = db.find(row => row.ID == id);
         if(!item) return;
 
-        isEditing = true;
-        editId = id;
-
-        // 기존 데이터 채워넣기
+        isEditing = true; editId = id;
         document.getElementById('date').value = getSafeDate(item.날짜).full;
         document.getElementById('moneyType').value = item.구분;
         document.getElementById('amount').value = item.금액;
@@ -298,47 +268,41 @@
         document.getElementById('payType').value = item.형태;
         document.getElementById('cardNo').value = item.카드번호;
 
-        // 디자인 변경 (수정 모드)
         document.getElementById('formTitle').innerText = "✏️ 내역 수정 중";
         document.getElementById('formTitle').style.color = "#e67e22";
         document.getElementById('btnSubmit').innerText = "수정 완료";
         document.getElementById('btnSubmit').classList.add('editing');
         document.getElementById('btnCancel').style.display = 'block';
         
-        // ★★★ [중요] 버튼 글씨 변경 (수정할 때도 카메라 쓰라고) ★★★
+        // 버튼 텍스트 변경
         document.getElementById('btnCam').innerText = "📷 촬영 변경";
         document.getElementById('btnGal').innerText = "📂 앨범 변경";
         
-        // 만약 기존 사진이 있으면 미리보기를 보여줄 수도 있지만, 
-        // 일단은 새로 찍을 수 있게 초기화 상태로 둡니다.
+        // 수정할 때도 사진 버튼이 보이게 초기화
         clearImg(); 
-
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
-        isEditing = false;
-        editId = null;
-        currentImgBase64 = null;
-        
+        isEditing = false; editId = null; currentImgBase64 = null;
         const ids = ['amount', 'item', 'detail', 'user', 'client', 'location', 'cardNo'];
         ids.forEach(id => document.getElementById(id).value = '');
         document.getElementById('date').valueAsDate = new Date();
         document.getElementById('payType').value = '카드영수증';
         
-        clearImg(); // 사진 미리보기 삭제
+        clearImg();
 
-        // 디자인 원상복구 (신규 모드)
         document.getElementById('formTitle').innerText = "📝 신규 등록";
         document.getElementById('formTitle').style.color = "#2c3e50";
         document.getElementById('btnSubmit').innerText = "등록하기";
         document.getElementById('btnSubmit').classList.remove('editing');
         document.getElementById('btnCancel').style.display = 'none';
         
-        // ★★★ [중요] 버튼 글씨 원상복구 ★★★
+        // 버튼 텍스트 원상복구
         document.getElementById('btnCam').innerText = "📷 바로 촬영";
         document.getElementById('btnGal').innerText = "📂 앨범 선택";
     }
+
     function delEntry(id) {
         if(!confirm("삭제하시겠습니까?")) return;
         showLoader(true, "삭제 중...");
@@ -347,6 +311,16 @@
         .then(data => { alert("삭제됨"); loadData(); })
         .catch(() => { alert("오류"); showLoader(false); });
     }
+
+    function getSafeDate(dateStr) {
+        if(!dateStr) return { full: "", short: "" };
+        const d = new Date(dateStr);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return { full: `${year}-${month}-${day}`, short: `${month}-${day}` };
+    }
+
     function renderTable() {
         const tbody = document.querySelector('#dataTable tbody');
         tbody.innerHTML = '';
@@ -367,13 +341,16 @@
             tbody.appendChild(tr);
         });
     }
+
+    // 사진 취소 (삭제) 및 버튼 복구
     function clearImg() {
         currentImgBase64 = null;
         document.getElementById('preview-area').style.display = 'none';
-        document.getElementById('btnArea').style.display = 'flex'; // 수정: flex로 변경
+        document.getElementById('btnArea').style.display = 'flex'; // 수정: flex로 유지
         document.getElementById('cameraInput').value = '';
         document.getElementById('galleryInput').value = '';
     }
+    
     function showLoader(show, msg="처리 중...") { 
         document.getElementById('loaderMsg').innerText = msg;
         document.getElementById('loader').style.display = show ? 'flex' : 'none'; 
@@ -386,4 +363,3 @@
 
 </body>
 </html>
-
