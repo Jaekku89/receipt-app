@@ -6,38 +6,29 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
-    <title>매입매출 관리 (카메라 수정)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>매입매출 관리 (최종 수정판)</title>
     <style>
-        /* 기본 스타일 유지 */
+        /* 스타일은 기존과 동일하게 유지 */
         :root { --primary: #2c3e50; --blue: #2980b9; --red: #c0392b; --orange: #d35400; --light: #f4f6f8; --border: #dfe6e9; --green: #27ae60; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 15px; background: var(--light); font-size: 14px; color: #333; -webkit-tap-highlight-color: transparent; }
-        
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 15px; }
         .header h1 { font-size: 20px; margin: 0; color: var(--primary); }
-        
         .btn { border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; padding: 10px 15px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
         .btn-refresh { background: var(--green); color: white; }
-        
         .input-section { background: #fafbfc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .form-title { font-weight: bold; font-size: 16px; color: var(--primary); }
         .btn-cancel { background: #95a5a6; color: white; font-size: 12px; display: none; padding: 6px 10px; }
-        
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
         .form-control { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; background: white; }
-        .form-control:focus { border-color: var(--primary); outline: none; }
-
+        
         .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; }
         .btn-submit.editing { background: #e67e22; }
         
-        /* ★★★ 카메라 버튼 분리 스타일 ★★★ */
         .camera-wrapper { margin-top: 5px; }
         .camera-buttons { display: flex; gap: 10px; }
         .btn-cam-action { flex: 1; padding: 12px; border: 2px dashed #bdc3c7; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; color: var(--primary); background: #ecf0f1; }
@@ -47,11 +38,10 @@
         #preview-img { max-height: 200px; max-width: 100%; border-radius: 4px; }
         .btn-del-img { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 25px; height: 25px; border: none; cursor: pointer; }
 
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 20px; }
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #f8f9fa; text-align: left; padding: 10px; font-size: 13px; color: #555; white-space: nowrap; border-bottom: 2px solid #eee; }
         td { border-bottom: 1px solid #eee; padding: 12px 10px; font-size: 14px; vertical-align: middle; }
-        
         .col-sales { color: var(--blue); font-weight: bold; }
         .col-exp { color: var(--red); font-weight: bold; }
         .receipt-btn { background: #3498db; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; text-decoration: none; display: inline-block; }
@@ -60,15 +50,10 @@
         .btn-edit { background: #f39c12; color: white; padding: 5px 8px; font-size: 12px; margin-right: 5px; }
         .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 12px; }
 
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 15px; }
-            th, td { padding: 10px 5px; font-size: 13px; }
-        }
-
         .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column; }
         .modal-content { max-width: 95%; max-height: 80%; object-fit: contain; }
         .close-modal { position: absolute; top: 30px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 20px; }
@@ -76,7 +61,7 @@
 </head>
 <body>
 
-<div id="loader" class="loader-overlay"><div class="spinner"></div><div>처리 중...</div></div>
+<div id="loader" class="loader-overlay"><div class="spinner"></div><div id="loaderMsg">처리 중...</div></div>
 
 <div class="container">
     <div class="header">
@@ -98,10 +83,13 @@
             <div class="form-group"><label>사용자</label><input type="text" id="user" placeholder="이름" class="form-control"></div>
             
             <div class="form-group full-width"><label>내역 (아이템)</label><input type="text" id="item" placeholder="예: 점심식사, 자재구입" class="form-control"></div>
+            
             <div class="form-group"><label>고객사</label><input type="text" id="client" placeholder="거래처명" class="form-control"></div>
             <div class="form-group"><label>장소</label><input type="text" id="location" placeholder="사용 장소" class="form-control"></div>
+            
             <div class="form-group"><label>형태</label><select id="payType" class="form-control"><option value="카드영수증">카드영수증</option><option value="계산서발행">계산서발행</option><option value="송금">송금</option><option value="현금">현금</option></select></div>
             <div class="form-group"><label>카드번호</label><input type="text" id="cardNo" placeholder="번호 (4자리)" class="form-control"></div>
+            
             <div class="form-group full-width"><label>상세설명</label><input type="text" id="detail" placeholder="추가 설명 (선택)" class="form-control"></div>
 
             <div class="camera-wrapper full-width">
@@ -110,13 +98,12 @@
 
                 <div class="camera-buttons" id="btnArea">
                     <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
-                    
                     <button class="btn-cam-action" id="btnGal" onclick="document.getElementById('galleryInput').click()" style="background:#fff3cd; color:#d35400; border-color:#f1c40f;">📂 앨범 선택</button>
                 </div>
 
-                <div id="preview-area" style="display:none; text-align:center; margin-top:10px; position:relative;">
-                    <img id="preview-img" src="" style="max-width:100%; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-                    <button class="btn-del-img" onclick="clearImg()" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:50%; width:25px; height:25px; font-weight:bold; cursor:pointer;">×</button>
+                <div id="preview-area">
+                    <img id="preview-img" src="">
+                    <button class="btn-del-img" onclick="clearImg()">×</button>
                     <div style="margin-top:5px; color:green; font-weight:bold;">✅ 사진 준비 완료</div>
                 </div>
             </div>
@@ -148,7 +135,7 @@
 </div>
 
 <script>
-    // ★★★ [중요] 여기에 기존 구글 스크립트 URL을 넣으세요 ★★★
+    // ★★★ [중요] 여기에 사장님의 구글 스크립트 URL을 넣으세요 ★★★
     const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec";
 
     let db = [];
@@ -162,17 +149,20 @@
     };
 
     function loadData() {
-        if(SERVER_URL.includes("여기에")) { alert("https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec"); return; }
-        showLoader(true);
+        if(SERVER_URL.includes("여기에")) { alert("스크립트 URL을 확인하세요!"); return; }
+        showLoader(true, "불러오는 중...");
         fetch(SERVER_URL + "?action=read")
         .then(res => res.json())
         .then(data => {
             db = data;
-            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜));
+            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); 
             renderTable();
             showLoader(false);
         })
-        .catch(err => { alert("로드 실패: " + err); showLoader(false); });
+        .catch(err => { 
+            alert("로드 실패: " + err); 
+            showLoader(false); 
+        });
     }
 
     function getSafeDate(dateStr) {
@@ -184,6 +174,7 @@
         return { full: `${year}-${month}-${day}`, short: `${month}-${day}` };
     }
 
+    // ★★★ 핵심 수정된 전송 함수 ★★★
     function submitData() {
         const date = document.getElementById('date').value;
         const amount = document.getElementById('amount').value;
@@ -203,24 +194,79 @@
             payType: document.getElementById('payType').value,
             cardNo: document.getElementById('cardNo').value,
             detail: document.getElementById('detail').value,
-            img: currentImgBase64
+            img: currentImgBase64 // 사진이 없으면 null
         };
 
         const url = isEditing ? (SERVER_URL + "?action=update") : SERVER_URL;
 
-        showLoader(true);
+        showLoader(true, "서버로 전송 중..."); // 로딩 메시지 변경
+
+        // [중요] no-cors 삭제! 이제 에러가 나면 진짜 에러를 볼 수 있습니다.
         fetch(url, {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // 구글 앱스 스크립트 호환성용
             body: JSON.stringify(entry)
         })
-        .then(() => {
-            alert(isEditing ? "✅ 수정되었습니다." : "✅ 등록되었습니다.");
-            cancelEdit();
-            loadData();
+        .then(res => res.json()) // 응답을 JSON으로 받음
+        .then(data => {
+            if(data.result === "success") {
+                alert(isEditing ? "✅ 수정 성공!" : "✅ 등록 성공!");
+                cancelEdit();
+                loadData();
+            } else {
+                alert("❌ 서버 오류: " + data.error);
+                showLoader(false);
+            }
         })
-        .catch(err => { alert("오류: " + err); showLoader(false); });
+        .catch(err => { 
+            alert("❌ 전송 실패 (인터넷 연결 확인): " + err); 
+            showLoader(false); 
+        });
+    }
+
+    // ★★★ 핵심 수정된 사진 처리 함수 ★★★
+    function handleFile(input) {
+        if(input.files && input.files[0]) {
+            showLoader(true, "사진 압축 중...");
+            
+            const file = input.files[0];
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            
+            img.onload = function() {
+                const cvs = document.createElement('canvas');
+                const ctx = cvs.getContext('2d');
+                
+                // [안전 모드] 600px로 더 줄임 (안드로이드 메모리 보호)
+                const maxDim = 600; 
+                let w = img.width;
+                let h = img.height;
+
+                if (w > h) {
+                    if (w > maxDim) { h *= maxDim / w; w = maxDim; }
+                } else {
+                    if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+                }
+                
+                cvs.width = w; cvs.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                // [안전 모드] 화질 0.5 (50%)로 설정
+                currentImgBase64 = cvs.toDataURL('image/jpeg', 0.5);
+                
+                document.getElementById('preview-img').src = currentImgBase64;
+                document.getElementById('btnArea').style.display = 'none';
+                document.getElementById('preview-area').style.display = 'block';
+                
+                URL.revokeObjectURL(img.src);
+                showLoader(false);
+            }
+            
+            img.onerror = function() {
+                alert("사진을 읽을 수 없습니다.");
+                showLoader(false);
+            }
+        }
     }
 
     function editRow(id) {
@@ -247,7 +293,6 @@
         document.getElementById('btnSubmit').classList.add('editing');
         document.getElementById('btnCancel').style.display = 'block';
         
-        // 버튼 텍스트 변경
         document.getElementById('btnCam').innerText = "📷 촬영 변경";
         document.getElementById('btnGal').innerText = "📂 앨범 변경";
 
@@ -278,11 +323,19 @@
 
     function delEntry(id) {
         if(!confirm("정말 삭제하시겠습니까?")) return;
-        showLoader(true);
+        showLoader(true, "삭제 중...");
         fetch(SERVER_URL + "?action=delete&id=" + id)
         .then(res => res.json())
-        .then(() => { alert("삭제되었습니다."); loadData(); })
-        .catch(() => { alert("오류"); showLoader(false); });
+        .then(data => { 
+            if(data.result === 'success') {
+                alert("삭제되었습니다."); 
+                loadData(); 
+            } else {
+                alert("삭제 실패");
+                showLoader(false);
+            }
+        })
+        .catch(() => { alert("오류 발생"); showLoader(false); });
     }
 
     function renderTable() {
@@ -320,68 +373,18 @@
         });
     }
 
-    // ★★★ 이 코드를 스크립트(<script>) 부분에 복사해 넣으세요 ★★★
-
-    function handleFile(input) {
-        if(input.files && input.files[0]) {
-            showLoader(true); // 로딩 시작
-            
-            const file = input.files[0];
-            const img = new Image();
-            
-            // 1. 메모리를 아끼기 위해 파일 주소만 따옵니다.
-            img.src = URL.createObjectURL(file);
-            
-            img.onload = function() {
-                const cvs = document.createElement('canvas');
-                const ctx = cvs.getContext('2d');
-                
-                // 2. 가로/세로 중 긴 쪽을 800px로 줄입니다 (안드로이드 용량 폭발 방지)
-                const maxDim = 800; 
-                let w = img.width;
-                let h = img.height;
-
-                if (w > h) {
-                    if (w > maxDim) { h *= maxDim / w; w = maxDim; }
-                } else {
-                    if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-                }
-                
-                cvs.width = w; cvs.height = h;
-                ctx.drawImage(img, 0, 0, w, h);
-                
-                // 3. 화질을 60%로 압축해서 저장
-                currentImgBase64 = cvs.toDataURL('image/jpeg', 0.6);
-                
-                // 4. 화면 처리: 버튼들은 숨기고, 미리보기 사진을 보여줍니다.
-                document.getElementById('preview-img').src = currentImgBase64;
-                
-                document.getElementById('btnArea').style.display = 'none'; // 버튼 숨기기
-                document.getElementById('preview-area').style.display = 'block'; // 사진 보여주기
-                
-                // 메모리 해제
-                URL.revokeObjectURL(img.src);
-                showLoader(false);
-            }
-            
-            img.onerror = function() {
-                alert("사진 처리 실패. 다시 시도해주세요.");
-                showLoader(false);
-            }
-        }
-    }
-
     function clearImg() {
-        // 사진 삭제 버튼을 눌렀을 때 초기화
         currentImgBase64 = null;
-        document.getElementById('preview-area').style.display = 'none'; // 사진 숨기기
-        document.getElementById('btnArea').style.display = 'block';     // 버튼 다시 보이기
-        
-        // 카메라, 앨범 입력창 모두 비우기
+        document.getElementById('preview-area').style.display = 'none';
+        document.getElementById('btnArea').style.display = 'block';     
         document.getElementById('cameraInput').value = '';
         document.getElementById('galleryInput').value = '';
     }
-    function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+    
+    function showLoader(show, msg="처리 중...") { 
+        document.getElementById('loaderMsg').innerText = msg;
+        document.getElementById('loader').style.display = show ? 'flex' : 'none'; 
+    }
     function openImageModal(url) { 
         document.getElementById('imageModal').style.display = 'flex'; 
         document.getElementById('modalImg').src = url; 
@@ -390,5 +393,3 @@
 
 </body>
 </html>
-
-
