@@ -106,12 +106,12 @@
 
             <div class="camera-wrapper full-width">
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
-                
                 <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
 
                 <div class="camera-buttons" id="btnArea">
-                    <button class="btn btn-camera" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
-                    <button class="btn btn-camera" onclick="document.getElementById('galleryInput').click()" style="margin-top:5px; background:#f1c40f; color:white; border:none;">📂 앨범 선택</button>
+                    <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
+                    
+                    <button class="btn-cam-action" id="btnGal" onclick="document.getElementById('galleryInput').click()" style="background:#fff3cd; color:#d35400; border-color:#f1c40f;">📂 앨범 선택</button>
                 </div>
 
                 <div id="preview-area" style="display:none; text-align:center; margin-top:10px; position:relative;">
@@ -390,4 +390,5 @@
 
 </body>
 </html>
+
 
