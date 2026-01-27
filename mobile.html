@@ -7,10 +7,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
-    <title>매입매출 관리 (날짜보정판)</title>
+    <title>매입매출 관리 (카메라 수정)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 기존 디자인 유지 */
+        /* 기본 스타일 유지 */
         :root { --primary: #2c3e50; --blue: #2980b9; --red: #c0392b; --orange: #d35400; --light: #f4f6f8; --border: #dfe6e9; --green: #27ae60; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 15px; background: var(--light); font-size: 14px; color: #333; -webkit-tap-highlight-color: transparent; }
         
@@ -22,7 +22,6 @@
         .btn:active { transform: scale(0.98); }
         .btn-refresh { background: var(--green); color: white; }
         
-        /* 폼 스타일 */
         .input-section { background: #fafbfc; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .form-title { font-weight: bold; font-size: 16px; color: var(--primary); }
@@ -30,7 +29,6 @@
         
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
-        
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
         .form-control { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; background: white; }
@@ -39,14 +37,16 @@
         .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; }
         .btn-submit.editing { background: #e67e22; }
         
+        /* ★★★ 카메라 버튼 분리 스타일 ★★★ */
         .camera-wrapper { margin-top: 5px; }
-        .btn-camera { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px; width: 100%; text-align: center; }
-        .btn-camera.active { background: #e8f8f5; border-color: var(--green); color: var(--green); }
+        .camera-buttons { display: flex; gap: 10px; }
+        .btn-cam-action { flex: 1; padding: 12px; border: 2px dashed #bdc3c7; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; color: var(--primary); background: #ecf0f1; }
+        .btn-cam-action.active { background: #e8f8f5; border-color: var(--green); color: var(--green); }
+        
         #preview-area { display: none; text-align: center; margin-top: 10px; position: relative; background: #eee; border-radius: 8px; padding: 5px; }
         #preview-img { max-height: 200px; max-width: 100%; border-radius: 4px; }
         .btn-del-img { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 25px; height: 25px; border: none; cursor: pointer; }
 
-        /* 테이블 */
         .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #f8f9fa; text-align: left; padding: 10px; font-size: 13px; color: #555; white-space: nowrap; border-bottom: 2px solid #eee; }
@@ -98,18 +98,21 @@
             <div class="form-group"><label>사용자</label><input type="text" id="user" placeholder="이름" class="form-control"></div>
             
             <div class="form-group full-width"><label>내역 (아이템)</label><input type="text" id="item" placeholder="예: 점심식사, 자재구입" class="form-control"></div>
-            
             <div class="form-group"><label>고객사</label><input type="text" id="client" placeholder="거래처명" class="form-control"></div>
             <div class="form-group"><label>장소</label><input type="text" id="location" placeholder="사용 장소" class="form-control"></div>
-            
             <div class="form-group"><label>형태</label><select id="payType" class="form-control"><option value="카드영수증">카드영수증</option><option value="계산서발행">계산서발행</option><option value="송금">송금</option><option value="현금">현금</option></select></div>
             <div class="form-group"><label>카드번호</label><input type="text" id="cardNo" placeholder="번호 (4자리)" class="form-control"></div>
-            
             <div class="form-group full-width"><label>상세설명</label><input type="text" id="detail" placeholder="추가 설명 (선택)" class="form-control"></div>
 
             <div class="camera-wrapper full-width">
-                <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button class="btn btn-camera" id="btnCam" onclick="document.getElementById('fileInput').click()">📷 영수증 촬영 / 사진 선택</button>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+                <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
+                
+                <div class="camera-buttons">
+                    <button class="btn-cam-action" id="btnCam" onclick="document.getElementById('cameraInput').click()">📷 바로 촬영</button>
+                    <button class="btn-cam-action" id="btnGal" onclick="document.getElementById('galleryInput').click()">📂 앨범 선택</button>
+                </div>
+
                 <div id="preview-area">
                     <img id="preview-img" src="">
                     <button class="btn-del-img" onclick="clearImg()">×</button>
@@ -143,7 +146,7 @@
 </div>
 
 <script>
-    // ★★★ [중요] 여기에 구글 스크립트 URL을 넣으세요 ★★★
+    // ★★★ [중요] 여기에 기존 구글 스크립트 URL을 넣으세요 ★★★
     const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec";
 
     let db = [];
@@ -163,28 +166,20 @@
         .then(res => res.json())
         .then(data => {
             db = data;
-            // 최신순 정렬
-            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); 
+            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜));
             renderTable();
             showLoader(false);
         })
         .catch(err => { alert("로드 실패: " + err); showLoader(false); });
     }
 
-    // ★★★ [핵심 수정] 날짜 보정 함수 ★★★
-    // 서버가 "22일 오후 3시"로 주든, "23일 0시"로 주든, 무조건 한국 스마트폰 날짜로 변환합니다.
     function getSafeDate(dateStr) {
         if(!dateStr) return { full: "", short: "" };
         const d = new Date(dateStr);
-        // 브라우저 로컬 시간(한국 시간) 기준 년,월,일 추출
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        
-        return {
-            full: `${year}-${month}-${day}`, // 2026-01-23 (수정폼용)
-            short: `${month}-${day}`         // 01-23 (리스트용)
-        };
+        return { full: `${year}-${month}-${day}`, short: `${month}-${day}` };
     }
 
     function submitData() {
@@ -233,9 +228,7 @@
         isEditing = true;
         editId = id;
 
-        // ★★★ [수정] 날짜 보정 적용
         document.getElementById('date').value = getSafeDate(item.날짜).full;
-        
         document.getElementById('moneyType').value = item.구분;
         document.getElementById('amount').value = item.금액;
         document.getElementById('user').value = item.사용자;
@@ -251,7 +244,10 @@
         document.getElementById('btnSubmit').innerText = "수정 완료";
         document.getElementById('btnSubmit').classList.add('editing');
         document.getElementById('btnCancel').style.display = 'block';
-        document.getElementById('btnCam').innerText = "📷 사진 변경 (선택)";
+        
+        // 버튼 텍스트 변경
+        document.getElementById('btnCam').innerText = "📷 촬영 변경";
+        document.getElementById('btnGal').innerText = "📂 앨범 변경";
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -273,6 +269,9 @@
         document.getElementById('btnSubmit').innerText = "등록하기";
         document.getElementById('btnSubmit').classList.remove('editing');
         document.getElementById('btnCancel').style.display = 'none';
+        
+        document.getElementById('btnCam').innerText = "📷 바로 촬영";
+        document.getElementById('btnGal').innerText = "📂 앨범 선택";
     }
 
     function delEntry(id) {
@@ -290,10 +289,7 @@
 
         db.forEach(item => {
             const val = parseInt(item.금액).toLocaleString();
-            
-            // ★★★ [수정] 날짜 보정 적용 (리스트용 짧은 날짜)
             const dateShort = getSafeDate(item.날짜).short; 
-            
             const typeClass = item.구분 === 'sales' ? 'col-sales' : 'col-exp';
             const clientName = item.고객사 || '-';
             
@@ -341,8 +337,12 @@
                     
                     document.getElementById('preview-img').src = currentImgBase64;
                     document.getElementById('preview-area').style.display = 'block';
-                    document.getElementById('btnCam').classList.add('active');
-                    document.getElementById('btnCam').innerText = "✅ 사진 준비됨";
+                    
+                    // 어떤 버튼을 눌렀는지에 따라 활성화 표시
+                    document.querySelectorAll('.btn-cam-action').forEach(b => b.classList.remove('active'));
+                    if(input.id === 'cameraInput') document.getElementById('btnCam').classList.add('active');
+                    else document.getElementById('btnGal').classList.add('active');
+                    
                     showLoader(false);
                 }
             };
@@ -353,9 +353,9 @@
     function clearImg() {
         currentImgBase64 = null;
         document.getElementById('preview-area').style.display = 'none';
-        document.getElementById('fileInput').value = '';
-        document.getElementById('btnCam').classList.remove('active');
-        document.getElementById('btnCam').innerText = "📷 영수증 촬영 / 사진 선택";
+        document.getElementById('cameraInput').value = '';
+        document.getElementById('galleryInput').value = '';
+        document.querySelectorAll('.btn-cam-action').forEach(b => b.classList.remove('active'));
     }
 
     function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
