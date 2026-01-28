@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>스마트 근태 달력</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 10px; background: #f0f2f5; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .calendar-header h2 { margin: 0; color: #333; font-size: 22px; font-weight: 800; }
+        .btn-month { background: none; border: 1px solid #ddd; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 18px; color: #555; }
+        
+        .calendar-grid { display: grid; grid-template-columns: 25px repeat(7, 1fr); gap: 0; border-top: 1px solid #eee; border-left: 1px solid #eee; }
+        
+        .header-cell { background: #f8f9fa; padding: 8px 0; font-size: 13px; font-weight: bold; border-right: 1px solid #eee; border-bottom: 1px solid #eee; color: #333; text-align: center;}
+        .header-cell.sun { color: #e74c3c; } 
+        .header-cell.sat { color: #2980b9; } 
+
+        .week-label { display: flex; align-items: center; justify-content: center; font-size: 10px; color: #bbb; background: #fdfdfd; border-right: 1px solid #eee; border-bottom: 1px solid #eee; writing-mode: vertical-lr; transform: rotate(180deg); }
+
+        .day-cell { 
+            min-height: 100px; 
+            border-right: 1px solid #eee; 
+            border-bottom: 1px solid #eee; 
+            padding: 0; 
+            padding-bottom: 5px;
+            font-size: 13px; 
+            position: relative; 
+            background: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1px; 
+        }
+        
+        .day-cell.sat { background-color: #fafbfd; } 
+        .day-cell.sat .day-num { color: #2980b9; }    
+        
+        .day-cell.holiday-bg { background-color: #fdfafa !important; } 
+        .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
+
+        /* ★★★ [수정] 오늘 날짜 스타일 (깨짐 방지) ★★★ */
+        .day-cell.today { 
+            background-color: #fff !important; 
+            /* border 대신 내부 그림자 사용 -> 레이아웃 밀림 해결 */
+            box-shadow: inset 0 0 0 2px #03c75a !important; 
+            z-index: 1; 
+        }
+        
+        .day-num { 
+            display: block; 
+            margin-bottom: 2px; 
+            font-weight: bold; 
+            color: #333; 
+            text-align: left; 
+            padding: 5px 0 0 5px; 
+        }
+
+        .event-bar { 
+            display: block; 
+            font-size: 11px; 
+            color: white; 
+            padding: 3px 6px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            cursor: pointer; 
+            text-align: left; 
+            height: 16px; 
+            line-height: 16px;
+            position: relative;
+        }
+        
+        /* 시작 부분 */
+        .event-bar.is-start { 
+            border-top-left-radius: 4px; 
+            border-bottom-left-radius: 4px; 
+            margin-left: 3px; 
+        }
+        
+        /* 끝 부분 */
+        .event-bar.is-end { 
+            border-top-right-radius: 4px; 
+            border-bottom-right-radius: 4px; 
+            margin-right: 3px; 
+        }
+        
+        /* 중간 연결 부분 */
+        .event-bar:not(.is-start) { margin-left: -1px; padding-left: 8px; } 
+        .event-bar:not(.is-end) { margin-right: -1px; padding-right: 8px; }
+
+        .evt-trip { background: #4a90e2; } 
+        .evt-vacation { background: #e74c3c; } 
+        .evt-etc { background: #f5a623; }
+        
+        .evt-holiday { 
+            background: transparent !important; 
+            color: #e74c3c; 
+            font-size: 11px; 
+            font-weight: bold;
+            text-align: left;
+            margin-bottom: 2px;
+            padding-left: 5px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer;
+        } 
+        
+        hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
+        h3 { margin: 0 0 15px 0; color: #333; font-size: 18px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 13px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 0; font-size: 15px; box-sizing: border-box; appearance: none; }
+        
+        .type-group { display: flex; gap: 8px; }
+        .radio-label { flex: 1; text-align: center; padding: 12px 5px; border: 1px solid #ddd; cursor: pointer; background: #fff; font-size: 13px; white-space: nowrap; }
+        .radio-label input { display: none; }
+        input[type="radio"]:checked + span { font-weight: bold; }
+        
+        .radio-label:has(input[value="출장"]:checked) { background: #eaf4ff; border-color: #4a90e2; color: #4a90e2; }
+        .radio-label:has(input[value="연차"]:checked) { background: #ffeeee; border-color: #e74c3c; color: #e74c3c; }
+        .radio-label:has(input[value="휴무"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
+
+        .btn-submit { width: 100%; background: #03c75a; color: white; padding: 15px; border: none; border-radius: 0; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        details { margin-top: 30px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+        summary { font-weight: bold; color: #555; cursor: pointer; outline: none; }
+        textarea { width: 100%; height: 150px; margin-top: 10px; font-family: monospace; font-size: 12px; border: 1px solid #ddd; padding: 5px; box-sizing: border-box; }
+        .btn-save-config { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 13px; }
+
+        .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loader">데이터 처리 중...</div>
+
+<div class="container">
+    <div class="calendar-header">
+        <button class="btn-month" onclick="changeMonth(-1)">◀</button>
+        <h2 id="monthTitle"></h2>
+        <button class="btn-month" onclick="changeMonth(1)">▶</button>
+    </div>
+    
+    <div class="calendar-grid" id="calendar"></div>
+
+    <hr>
+
+    <h3>📝 일정 등록</h3>
+    <div class="form-group">
+        <label>직원 이름 (휴무 등록 시 비워도 됨)</label>
+        <input type="text" id="name" placeholder="이름 입력">
+    </div>
+
+    <div class="form-group">
+        <label>구분</label>
+        <div class="type-group">
+            <label class="radio-label"><input type="radio" name="type" value="출장" checked><span>✈️ 출장</span></label>
+            <label class="radio-label"><input type="radio" name="type" value="연차"><span>🏖️ 연차</span></label>
+            <label class="radio-label"><input type="radio" name="type" value="기타"><span>📝 기타</span></label>
+            <label class="radio-label"><input type="radio" name="type" value="휴무"><span>🎌 휴무</span></label>
+        </div>
+    </div>
+
+    <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
+    <div class="form-group"><label>종료일</label><input type="date" id="endDate"></div>
+    <div class="form-group"><label>상세 내용 (목적지 / 휴일명)</label><input type="text" id="reason" placeholder="예: 부산 출장 / 창립기념일"></div>
+
+    <button class="btn-submit" onclick="submitData()">등록하기</button>
+
+    <details>
+        <summary>⚙️ 공휴일 데이터 관리 (2027년 갱신용)</summary>
+        <p style="font-size:12px; color:#666;">아래 칸에 공휴일 목록(JSON)을 붙여넣고 저장하세요.</p>
+        <textarea id="holidayConfig"></textarea>
+        <button class="btn-save-config" onclick="saveHolidayConfig()">공휴일 데이터 저장</button>
+    </details>
+</div>
+
+<script>
+    // ★★★ [중요] 배포 URL 입력 ★★★
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj1RhofZM8Kat7VUk-MZ9oNCgiTMn_Mi3inSWFDy-hbB1oDOCl4IpZGlcNH_gDxylQig/exec";
+
+    const DEFAULT_HOLIDAYS = {
+        "2025-01-01": "신정", "2025-01-27": "대체휴일", "2025-01-28": "설날", "2025-01-29": "설날 연휴", "2025-01-30": "설날 연휴",
+        "2025-03-01": "삼일절", "2025-03-03": "대체휴일", "2025-05-05": "어린이날", "2025-05-06": "대체휴일", "2025-06-06": "현충일",
+        "2025-08-15": "광복절", "2025-10-03": "개천절", "2025-10-05": "추석 연휴", "2025-10-06": "추석", "2025-10-07": "추석 연휴",
+        "2025-10-08": "대체휴일", "2025-10-09": "한글날", "2025-12-25": "성탄절",
+        "2026-01-01": "신정", "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴", "2026-03-01": "삼일절",
+        "2026-03-02": "대체휴일", "2026-05-05": "어린이날", "2026-05-24": "부처님오신날", "2026-05-25": "대체휴일", "2026-06-03": "지방선거",
+        "2026-06-06": "현충일", "2026-08-15": "광복절", "2026-08-17": "대체휴일", "2026-09-24": "추석 연휴", "2026-09-25": "추석",
+        "2026-09-26": "추석 연휴", "2026-10-03": "개천절", "2026-10-09": "한글날", "2026-12-25": "성탄절"
+    };
+
+    let HOLIDAYS = DEFAULT_HOLIDAYS; 
+    let currentDate = new Date(); 
+    let dbEvents = []; 
+
+    window.onload = function() {
+        if(SCRIPT_URL.includes("여기에")) { alert("URL 미설정"); return; }
+        document.getElementById('startDate').valueAsDate = new Date();
+        document.getElementById('endDate').valueAsDate = new Date();
+        loadEvents(); 
+    }
+
+    function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+
+    function loadEvents() {
+        showLoader(true);
+        fetch(SCRIPT_URL + "?action=read")
+        .then(res => res.json())
+        .then(data => {
+            dbEvents = data.events;
+            if(data.holidays && data.holidays.length > 10) {
+                try { HOLIDAYS = JSON.parse(data.holidays); } catch(e) { HOLIDAYS = DEFAULT_HOLIDAYS; }
+            }
+            document.getElementById('holidayConfig').value = JSON.stringify(HOLIDAYS, null, 4);
+            renderCalendar(); 
+            showLoader(false);
+        })
+        .catch(err => { alert("데이터 로드 실패"); showLoader(false); });
+    }
+
+    function saveHolidayConfig() {
+        const jsonStr = document.getElementById('holidayConfig').value;
+        try { JSON.parse(jsonStr); } catch(e) { alert("형식 오류"); return; }
+        if(!confirm("업데이트 하시겠습니까?")) return;
+        showLoader(true);
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "save_holidays", holidays: jsonStr }) })
+        .then(() => { alert("저장됨"); loadEvents(); })
+        .catch(err => { alert("오류"); showLoader(false); });
+    }
+
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    }
+
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        document.getElementById('monthTitle').innerText = `${year}.${String(month+1).padStart(2,'0')}`;
+        const calendarEl = document.getElementById('calendar');
+        calendarEl.innerHTML = '';
+
+        calendarEl.innerHTML += `<div class="week-label"></div>`; 
+        const days = ['일','월','화','수','목','금','토'];
+        days.forEach((d, idx) => {
+            let className = 'header-cell';
+            if(idx === 0) className += ' sun'; 
+            if(idx === 6) className += ' sat'; 
+            calendarEl.innerHTML += `<div class="${className}">${d}</div>`;
+        });
+
+        const firstDayObj = new Date(year, month, 1);
+        const firstDay = firstDayObj.getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        let currentDay = 1;
+        let weekCount = 0;
+        
+        while(currentDay <= lastDate) {
+            let weekStartObj = new Date(year, month, currentDay);
+            let weekNum = getWeekNumber(weekStartObj);
+            
+            calendarEl.innerHTML += `<div class="week-label">WK${weekNum}</div>`;
+
+            for(let i=0; i<7; i++) {
+                if(weekCount === 0 && i < firstDay) {
+                    calendarEl.innerHTML += `<div style="border-bottom:1px solid #eee; border-right:1px solid #eee; background:#fafafa;"></div>`;
+                } 
+                else if(currentDay <= lastDate) {
+                    let isToday = (year === new Date().getFullYear() && month === new Date().getMonth() && currentDay === new Date().getDate()) ? 'today' : '';
+                    let thisDayStr = `${year}-${String(month+1).padStart(2,'0')}-${String(currentDay).padStart(2,'0')}`;
+                    
+                    let holidayName = HOLIDAYS[thisDayStr];
+                    let isRedDay = (i === 0 || holidayName) ? true : false;
+
+                    let bgClass = '';
+                    if(isRedDay) bgClass = 'holiday-bg';
+                    else if(i === 6) bgClass = 'sat'; 
+
+                    dbEvents.forEach(evt => {
+                         if(evt.type === '휴무' && thisDayStr >= evt.start && thisDayStr <= evt.end) {
+                             bgClass = 'holiday-bg';
+                             isRedDay = true;
+                         }
+                    });
+
+                    let cellHtml = `<div class="day-cell ${bgClass} ${isToday}">`;
+                    
+                    let numColor = '';
+                    if(isRedDay) numColor = 'style="color:#e74c3c"';
+                    else if(i === 6) numColor = 'style="color:#2980b9"';
+
+                    cellHtml += `<span class="day-num" ${numColor}>${currentDay}</span>`;
+                    
+                    if(holidayName) {
+                        cellHtml += `<div class="evt-holiday">${holidayName}</div>`;
+                    }
+
+                    // 일정 정렬
+                    let todaysEvents = dbEvents.filter(evt => thisDayStr >= evt.start && thisDayStr <= evt.end);
+                    todaysEvents.sort((a,b) => a.id.localeCompare(b.id));
+
+                    todaysEvents.forEach(evt => {
+                        if(evt.type === '휴무') {
+                            cellHtml += `<div class="evt-holiday" onclick="askDelete('${evt.id}', '${evt.reason}', '${evt.type}')">${evt.reason}</div>`;
+                        } else {
+                            let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : 'evt-etc');
+                            let displayText = evt.name;
+                            if (evt.type === '연차') displayText += " - 연차";
+                            else if(evt.reason) displayText += " - " + evt.reason;
+
+                            // ★★★ [핵심] 글씨 표시 로직 수정 ★★★
+                            // 1. 일정의 첫날이거나
+                            // 2. 일요일(새로운 주 시작)이면 글씨 표시
+                            let isStart = (thisDayStr === evt.start);
+                            let isWeekStart = (i === 0);
+                            let showText = isStart || isWeekStart;
+
+                            let content = showText ? displayText : "&nbsp;"; // 글씨가 없어도 높이 유지를 위해 공백
+
+                            let barClass = "";
+                            if(isStart) barClass += " is-start";
+                            if(thisDayStr === evt.end) barClass += " is-end";
+
+                            cellHtml += `<span class="event-bar ${colorClass} ${barClass}" onclick="askDelete('${evt.id}', '${evt.name}', '${evt.type}')">${content}</span>`;
+                        }
+                    });
+
+                    cellHtml += `</div>`;
+                    calendarEl.innerHTML += cellHtml;
+                    currentDay++;
+                } 
+                else {
+                    calendarEl.innerHTML += `<div style="border-bottom:1px solid #eee; border-right:1px solid #eee; background:#fafafa;"></div>`;
+                }
+            }
+            weekCount++;
+        }
+    }
+
+    function changeMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+    }
+
+    function askDelete(id, name, type) {
+        if(!id || id.startsWith('manual_') === false) return; 
+        if(confirm(`[${type}] ${name} 일정을 삭제하시겠습니까?`)) {
+            showLoader(true);
+            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", id: id }) })
+            .then(() => { alert("🗑️ 삭제되었습니다."); setTimeout(loadEvents, 1000); })
+            .catch(err => { alert("오류"); showLoader(false); });
+        }
+    }
+
+    function submitData() {
+        const name = document.getElementById('name').value;
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const reason = document.getElementById('reason').value;
+
+        if(type !== '휴무' && !name) { alert("이름 입력 필요"); return; }
+        if(!startDate || !endDate) { alert("날짜 입력 필요"); return; }
+        if(!reason) { alert("내용 입력 필요"); return; }
+
+        showLoader(true);
+        const data = { name, type, startDate, endDate, reason };
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) })
+        .then(() => { alert("✅ 등록됨"); document.getElementById('name').value=''; document.getElementById('reason').value=''; loadEvents(); })
+        .catch(err => { alert("오류"); showLoader(false); });
+    }
+</script>
+
+</body>
+</html>
