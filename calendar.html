@@ -8,6 +8,7 @@
         body { font-family: -apple-system, sans-serif; padding: 5px; background: #f0f2f5; margin: 0; }
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
+        /* 달력 헤더 */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .calendar-header h2 { margin: 0; color: #333; font-size: 20px; font-weight: 800; }
         .btn-month { background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 16px; color: #555; }
@@ -15,95 +16,100 @@
         .calendar-grid { display: grid; grid-template-columns: 20px repeat(7, 1fr); gap: 0; border-top: 1px solid #eee; border-left: 1px solid #eee; }
         
         .header-cell { background: #f8f9fa; padding: 6px 0; font-size: 11px; font-weight: bold; border-right: 1px solid #eee; border-bottom: 1px solid #eee; color: #333; text-align: center;}
-        .header-cell.sun { color: #e74c3c; } 
-        .header-cell.sat { color: #2980b9; } 
-
+        .header-cell.sun { color: #e74c3c; } .header-cell.sat { color: #2980b9; } 
         .week-label { display: flex; align-items: center; justify-content: center; font-size: 9px; color: #bbb; background: #fdfdfd; border-right: 1px solid #eee; border-bottom: 1px solid #eee; writing-mode: vertical-lr; transform: rotate(180deg); }
 
-        .day-cell { 
-            min-height: 70px; 
-            border-right: 1px solid #eee; 
-            border-bottom: 1px solid #eee; 
-            padding: 0; 
-            padding-bottom: 3px;
-            font-size: 11px; 
-            position: relative; 
-            background: #fff; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 1px; 
-        }
-        
+        .day-cell { min-height: 60px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; padding: 0 0 3px 0; font-size: 11px; position: relative; background: #fff; display: flex; flex-direction: column; gap: 1px; }
         .day-cell.sat { background-color: #fafbfd; } 
         .day-cell.sat .day-num { color: #2980b9; }    
         .day-cell.holiday-bg { background-color: #fdfafa !important; } 
         .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
         .day-cell.today { background-color: #fff !important; box-shadow: inset 0 0 0 1px #03c75a !important; z-index: 1; }
-        
         .day-num { display: block; margin-bottom: 1px; font-weight: bold; color: #333; text-align: left; padding: 3px 0 0 3px; font-size: 11px; }
 
-        /* ★★★ [핵심 수정] 글씨가 칸을 넘어가도록 설정 ★★★ */
+        /* 일정 막대 (이름만 표시, 넘침 허용) */
         .event-bar { 
-            display: block; 
-            height: 14px; 
-            line-height: 14px;
-            position: relative;
-            margin-bottom: 1px;
-            cursor: pointer;
-            /* overflow: hidden을 제거하여 글씨가 밖으로 나가게 함 */
+            display: block; height: 14px; line-height: 14px; position: relative; margin-bottom: 1px; cursor: pointer;
         }
-        
-        /* 텍스트 래퍼: 절대 위치로 띄워서 칸 너비 무시 */
         .evt-content {
-            position: absolute;
-            left: 4px;
-            top: 0;
-            white-space: nowrap;
-            font-size: 9px;
-            color: white;
-            z-index: 10; /* 글씨가 다른 요소 위에 뜨도록 */
-            pointer-events: none; /* 클릭은 뒤쪽 바가 받도록 */
-            text-shadow: 0 0 2px rgba(0,0,0,0.2); /* 가독성 위해 그림자 살짝 */
+            position: absolute; left: 4px; top: 0; white-space: nowrap; font-size: 9px; color: white; z-index: 10; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.2);
         }
-
         .event-bar.is-start { border-top-left-radius: 3px; border-bottom-left-radius: 3px; margin-left: 2px; }
         .event-bar.is-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; margin-right: 2px; }
-        .event-bar:not(.is-start) { margin-left: -1px; } 
-        .event-bar:not(.is-end) { margin-right: -1px; }
+        .event-bar:not(.is-start) { margin-left: -1px; } .event-bar:not(.is-end) { margin-right: -1px; }
+        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-etc { background: #f5a623; }
+        .evt-holiday { background: transparent !important; color: #e74c3c; font-size: 9px; font-weight: bold; text-align: left; margin-bottom: 1px; padding-left: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } 
 
-        .evt-trip { background: #4a90e2; } 
-        .evt-vacation { background: #e74c3c; } 
-        .evt-etc { background: #f5a623; }
+        /* ★★★ [수정] 한 줄 리스트 스타일 ★★★ */
+        .monthly-list-container { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
+        .list-header { font-size: 15px; font-weight: 800; color: #333; margin-bottom: 10px; display: flex; align-items: center; }
         
-        .evt-holiday { 
-            background: transparent !important; 
-            color: #e74c3c; 
-            font-size: 9px; 
-            font-weight: bold;
-            text-align: left;
-            margin-bottom: 1px;
-            padding-left: 3px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            cursor: pointer;
-        } 
+        .list-item { 
+            background: #fff; 
+            border-bottom: 1px solid #f1f1f1; 
+            padding: 12px 5px; 
+            display: flex; /* 가로 배치 */
+            align-items: center; /* 세로 중앙 정렬 */
+            gap: 8px; /* 요소 간 간격 */
+            font-size: 13px;
+        }
+        .list-item:last-child { border-bottom: none; }
         
-        hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+        .list-date { 
+            font-size: 11px; 
+            color: #555; 
+            font-weight: bold; 
+            background: #f1f3f5; 
+            padding: 3px 6px; 
+            border-radius: 4px; 
+            white-space: nowrap; /* 줄바꿈 방지 */
+        }
+        
+        .list-content-wrapper {
+            flex: 1; /* 남은 공간 모두 차지 */
+            display: flex;
+            align-items: center;
+            overflow: hidden; /* 넘치는 글자 숨김 */
+            white-space: nowrap;
+        }
+
+        .list-name { font-weight: bold; color: #333; margin-right: 5px; }
+        .list-reason { 
+            color: #888; 
+            font-size: 12px; 
+            overflow: hidden; 
+            text-overflow: ellipsis; /* 말줄임표(...) */
+        }
+
+        .list-badge { 
+            font-size: 10px; 
+            padding: 4px 6px; 
+            border-radius: 4px; 
+            color: white; 
+            font-weight: bold; 
+            white-space: nowrap; 
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .badge-trip { background: #4a90e2; }
+        .badge-vacation { background: #e74c3c; }
+        .badge-etc { background: #f5a623; }
+
+        /* 입력 폼 */
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
         h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; }
         .form-group { margin-bottom: 10px; }
         label { display: block; margin-bottom: 3px; font-weight: bold; color: #555; font-size: 12px; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; font-size: 14px; box-sizing: border-box; appearance: none; }
-        
         .type-group { display: flex; gap: 5px; }
         .radio-label { flex: 1; text-align: center; padding: 10px 2px; border: 1px solid #ddd; cursor: pointer; background: #fff; font-size: 12px; white-space: nowrap; }
         .radio-label input { display: none; }
         input[type="radio"]:checked + span { font-weight: bold; }
-        
         .radio-label:has(input[value="출장"]:checked) { background: #eaf4ff; border-color: #4a90e2; color: #4a90e2; }
         .radio-label:has(input[value="연차"]:checked) { background: #ffeeee; border-color: #e74c3c; color: #e74c3c; }
         .radio-label:has(input[value="기타"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
-
         .btn-submit { width: 100%; background: #03c75a; color: white; padding: 12px; border: none; border-radius: 0; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; }
     </style>
 </head>
@@ -117,17 +123,17 @@
         <h2 id="monthTitle"></h2>
         <button class="btn-month" onclick="changeMonth(1)">▶</button>
     </div>
-    
     <div class="calendar-grid" id="calendar"></div>
+
+    <div class="monthly-list-container">
+        <div class="list-header">📋 <span id="listMonthTitle"></span> 상세 일정</div>
+        <div id="monthlyList"></div>
+    </div>
 
     <hr>
 
     <h3>📝 일정 등록</h3>
-    <div class="form-group">
-        <label>직원 이름</label>
-        <input type="text" id="name" placeholder="이름 입력">
-    </div>
-
+    <div class="form-group"><label>직원 이름</label><input type="text" id="name" placeholder="이름 입력"></div>
     <div class="form-group">
         <label>구분</label>
         <div class="type-group">
@@ -136,20 +142,16 @@
             <label class="radio-label"><input type="radio" name="type" value="기타"><span>📝 기타</span></label>
         </div>
     </div>
-
     <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
     <div class="form-group"><label>종료일</label><input type="date" id="endDate"></div>
     <div class="form-group"><label>상세 내용</label><input type="text" id="reason" placeholder="목적지 / 사유"></div>
-
     <button class="btn-submit" onclick="submitData()">등록하기</button>
 </div>
 
 <script>
-    // ★★★ [중요] 배포 URL 입력 ★★★
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj1RhofZM8Kat7VUk-MZ9oNCgiTMn_Mi3inSWFDy-hbB1oDOCl4IpZGlcNH_gDxylQig/exec";
     const ADMIN_PASSWORD = "1234"; 
 
-    // 공휴일 목록
     const DEFAULT_HOLIDAYS = {
         "2025-01-01": "신정", "2025-01-27": "대체휴일", "2025-01-28": "설날", "2025-01-29": "설날 연휴", "2025-01-30": "설날 연휴",
         "2025-03-01": "삼일절", "2025-03-03": "대체휴일", "2025-05-05": "어린이날", "2025-05-06": "대체휴일", "2025-06-06": "현충일",
@@ -196,7 +198,11 @@
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        document.getElementById('monthTitle').innerText = `${year}.${String(month+1).padStart(2,'0')}`;
+        const monthStr = `${year}.${String(month+1).padStart(2,'0')}`;
+        
+        document.getElementById('monthTitle').innerText = monthStr;
+        document.getElementById('listMonthTitle').innerText = String(month+1) + "월"; 
+
         const calendarEl = document.getElementById('calendar');
         calendarEl.innerHTML = `<div class="week-label"></div>`; 
         
@@ -210,7 +216,6 @@
         const lastDate = new Date(year, month + 1, 0).getDate();
 
         let currentDay = 1;
-        let weekCount = 0;
         
         while(currentDay <= lastDate) {
             let weekStartObj = new Date(year, month, currentDay);
@@ -227,7 +232,6 @@
                     let numColor = '';
 
                     dbEvents.forEach(evt => { if(evt.type === '휴무' && thisDayStr >= evt.start && thisDayStr <= evt.end) { bgClass = 'holiday-bg'; isRedDay = true; } });
-                    
                     if(isRedDay) { bgClass = 'holiday-bg'; numColor = 'style="color:#e74c3c"'; }
                     else if(i === 6) { numColor = 'style="color:#2980b9"'; bgClass = 'sat'; }
 
@@ -236,36 +240,26 @@
                     
                     if(holidayName) cellHtml += `<div class="evt-holiday">${holidayName}</div>`;
 
-                    // 일정 렌더링
-                    let todaysEvents = dbEvents.filter(evt => thisDayStr >= evt.start && thisDayStr <= evt.end);
-                    
-                    // ★★★ [긴 일정 우선 정렬] ★★★
-                    todaysEvents.sort((a, b) => {
+                    let dayEvents = dbEvents.filter(evt => thisDayStr >= evt.start && thisDayStr <= evt.end);
+                    dayEvents.sort((a, b) => {
                         if (a.start !== b.start) return a.start.localeCompare(b.start);
-                        if (a.end !== b.end) return b.end.localeCompare(a.end); // 종료일 늦은게 위로
+                        if (a.end !== b.end) return b.end.localeCompare(a.end);
                         return a.name.localeCompare(b.name);
                     });
 
-                    todaysEvents.forEach(evt => {
+                    dayEvents.forEach(evt => {
                         if(evt.type === '휴무') {
                             cellHtml += `<div class="evt-holiday">${evt.reason}</div>`;
                         } else {
                             let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : 'evt-etc');
-                            let displayText = evt.name;
-                            if (evt.type === '연차') displayText += " - 연차";
-                            else if(evt.reason) displayText += " - " + evt.reason;
+                            
+                            // ★★★ [수정] 달력에는 오직 이름만 표시 ★★★
+                            let displayText = evt.name; 
 
-                            // ★★★ [핵심] 텍스트 흐름 로직 ★★★
-                            // 일정이 시작하는 날이거나, 일요일(새 줄의 시작)이면 텍스트를 표시
                             let isStart = (thisDayStr === evt.start);
                             let isWeekStart = (i === 0);
                             let showText = isStart || isWeekStart;
-
-                            let contentHtml = "";
-                            if(showText) {
-                                // 글씨를 absolute로 띄워서 칸 너비 제한을 무시하고 옆으로 흐르게 함
-                                contentHtml = `<span class="evt-content">${displayText}</span>`;
-                            }
+                            let contentHtml = showText ? `<span class="evt-content">${displayText}</span>` : "";
 
                             let barClass = "";
                             if(isStart) barClass += " is-start";
@@ -276,7 +270,6 @@
                                          </div>`;
                         }
                     });
-
                     cellHtml += `</div>`;
                     calendarEl.innerHTML += cellHtml;
                     currentDay++;
@@ -285,6 +278,47 @@
                 }
             }
         }
+        
+        renderMonthlyList(year, month);
+    }
+
+    // ★★★ [신규] 한 줄 리스트 생성 함수 ★★★
+    function renderMonthlyList(year, month) {
+        const listEl = document.getElementById('monthlyList');
+        listEl.innerHTML = '';
+
+        const monthStartStr = `${year}-${String(month+1).padStart(2,'0')}-01`;
+        const lastDay = new Date(year, month+1, 0).getDate();
+        const monthEndStr = `${year}-${String(month+1).padStart(2,'0')}-${lastDay}`;
+
+        let monthlyEvents = dbEvents.filter(evt => {
+            if (evt.type === '휴무') return false;
+            return (evt.start <= monthEndStr && evt.end >= monthStartStr);
+        });
+
+        monthlyEvents.sort((a,b) => a.start.localeCompare(b.start));
+
+        if (monthlyEvents.length === 0) {
+            listEl.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">이번 달 예정된 일정이 없습니다.</div>';
+            return;
+        }
+
+        monthlyEvents.forEach(evt => {
+            let badgeClass = evt.type === '출장' ? 'badge-trip' : (evt.type === '연차' ? 'badge-vacation' : 'badge-etc');
+            let dateText = `${evt.start.slice(5)} ~ ${evt.end.slice(5)}`;
+            if(evt.start === evt.end) dateText = evt.start.slice(5);
+
+            let html = `
+            <div class="list-item" onclick="askDelete('${evt.id}', '${evt.name}', '${evt.type}', '${evt.end}')">
+                <span class="list-date">${dateText}</span>
+                <div class="list-content-wrapper">
+                    <span class="list-name">${evt.name}</span>
+                    <span class="list-reason">- ${evt.reason}</span>
+                </div>
+                <span class="list-badge ${badgeClass}">${evt.type}</span>
+            </div>`;
+            listEl.innerHTML += html;
+        });
     }
 
     function changeMonth(delta) {
@@ -317,9 +351,9 @@
         const endDate = document.getElementById('endDate').value;
         const reason = document.getElementById('reason').value;
 
-        if(type !== '휴무' && !name) { alert("이름을 입력하세요."); return; }
-        if(!startDate || !endDate) { alert("날짜를 입력하세요."); return; }
-        if(!reason) { alert("내용을 입력하세요."); return; }
+        if(type !== '휴무' && !name) { alert("이름 입력 필요"); return; }
+        if(!startDate || !endDate) { alert("날짜 입력 필요"); return; }
+        if(!reason) { alert("내용 입력 필요"); return; }
 
         showLoader(true);
         const data = { name, type, startDate, endDate, reason };
