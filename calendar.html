@@ -40,10 +40,8 @@
         .day-cell.holiday-bg { background-color: #fdfafa !important; } 
         .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
 
-        /* ★★★ [수정] 오늘 날짜 스타일 (깨짐 방지) ★★★ */
         .day-cell.today { 
             background-color: #fff !important; 
-            /* border 대신 내부 그림자 사용 -> 레이아웃 밀림 해결 */
             box-shadow: inset 0 0 0 2px #03c75a !important; 
             z-index: 1; 
         }
@@ -72,21 +70,8 @@
             position: relative;
         }
         
-        /* 시작 부분 */
-        .event-bar.is-start { 
-            border-top-left-radius: 4px; 
-            border-bottom-left-radius: 4px; 
-            margin-left: 3px; 
-        }
-        
-        /* 끝 부분 */
-        .event-bar.is-end { 
-            border-top-right-radius: 4px; 
-            border-bottom-right-radius: 4px; 
-            margin-right: 3px; 
-        }
-        
-        /* 중간 연결 부분 */
+        .event-bar.is-start { border-top-left-radius: 4px; border-bottom-left-radius: 4px; margin-left: 3px; }
+        .event-bar.is-end { border-top-right-radius: 4px; border-bottom-right-radius: 4px; margin-right: 3px; }
         .event-bar:not(.is-start) { margin-left: -1px; padding-left: 8px; } 
         .event-bar:not(.is-end) { margin-right: -1px; padding-right: 8px; }
 
@@ -103,7 +88,7 @@
             margin-bottom: 2px;
             padding-left: 5px; 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            cursor: pointer;
+            cursor: pointer; /* 클릭해서 내용 확인 가능 */
         } 
         
         hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
@@ -119,15 +104,10 @@
         
         .radio-label:has(input[value="출장"]:checked) { background: #eaf4ff; border-color: #4a90e2; color: #4a90e2; }
         .radio-label:has(input[value="연차"]:checked) { background: #ffeeee; border-color: #e74c3c; color: #e74c3c; }
-        .radio-label:has(input[value="휴무"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
+        .radio-label:has(input[value="기타"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
 
         .btn-submit { width: 100%; background: #03c75a; color: white; padding: 15px; border: none; border-radius: 0; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
-        details { margin-top: 30px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
-        summary { font-weight: bold; color: #555; cursor: pointer; outline: none; }
-        textarea { width: 100%; height: 150px; margin-top: 10px; font-family: monospace; font-size: 12px; border: 1px solid #ddd; padding: 5px; box-sizing: border-box; }
-        .btn-save-config { background: #555; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 13px; }
-
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; }
     </style>
 </head>
@@ -148,7 +128,7 @@
 
     <h3>📝 일정 등록</h3>
     <div class="form-group">
-        <label>직원 이름 (휴무 등록 시 비워도 됨)</label>
+        <label>직원 이름</label>
         <input type="text" id="name" placeholder="이름 입력">
     </div>
 
@@ -158,28 +138,21 @@
             <label class="radio-label"><input type="radio" name="type" value="출장" checked><span>✈️ 출장</span></label>
             <label class="radio-label"><input type="radio" name="type" value="연차"><span>🏖️ 연차</span></label>
             <label class="radio-label"><input type="radio" name="type" value="기타"><span>📝 기타</span></label>
-            <label class="radio-label"><input type="radio" name="type" value="휴무"><span>🎌 휴무</span></label>
-        </div>
+            </div>
     </div>
 
     <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
     <div class="form-group"><label>종료일</label><input type="date" id="endDate"></div>
-    <div class="form-group"><label>상세 내용 (목적지 / 휴일명)</label><input type="text" id="reason" placeholder="예: 부산 출장 / 창립기념일"></div>
+    <div class="form-group"><label>상세 내용 (목적지 등)</label><input type="text" id="reason" placeholder="예: 부산 출장 / 개인 사정"></div>
 
     <button class="btn-submit" onclick="submitData()">등록하기</button>
-
-    <details>
-        <summary>⚙️ 공휴일 데이터 관리 (2027년 갱신용)</summary>
-        <p style="font-size:12px; color:#666;">아래 칸에 공휴일 목록(JSON)을 붙여넣고 저장하세요.</p>
-        <textarea id="holidayConfig"></textarea>
-        <button class="btn-save-config" onclick="saveHolidayConfig()">공휴일 데이터 저장</button>
-    </details>
 </div>
 
 <script>
     // ★★★ [중요] 배포 URL 입력 ★★★
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj1RhofZM8Kat7VUk-MZ9oNCgiTMn_Mi3inSWFDy-hbB1oDOCl4IpZGlcNH_gDxylQig/exec";
 
+    // 기본 공휴일 데이터 (표시용)
     const DEFAULT_HOLIDAYS = {
         "2025-01-01": "신정", "2025-01-27": "대체휴일", "2025-01-28": "설날", "2025-01-29": "설날 연휴", "2025-01-30": "설날 연휴",
         "2025-03-01": "삼일절", "2025-03-03": "대체휴일", "2025-05-05": "어린이날", "2025-05-06": "대체휴일", "2025-06-06": "현충일",
@@ -210,24 +183,14 @@
         .then(res => res.json())
         .then(data => {
             dbEvents = data.events;
+            // 관리자가 PC에서 수정한 공휴일 데이터를 받아와서 적용 (보기만 가능)
             if(data.holidays && data.holidays.length > 10) {
                 try { HOLIDAYS = JSON.parse(data.holidays); } catch(e) { HOLIDAYS = DEFAULT_HOLIDAYS; }
             }
-            document.getElementById('holidayConfig').value = JSON.stringify(HOLIDAYS, null, 4);
             renderCalendar(); 
             showLoader(false);
         })
         .catch(err => { alert("데이터 로드 실패"); showLoader(false); });
-    }
-
-    function saveHolidayConfig() {
-        const jsonStr = document.getElementById('holidayConfig').value;
-        try { JSON.parse(jsonStr); } catch(e) { alert("형식 오류"); return; }
-        if(!confirm("업데이트 하시겠습니까?")) return;
-        showLoader(true);
-        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "save_holidays", holidays: jsonStr }) })
-        .then(() => { alert("저장됨"); loadEvents(); })
-        .catch(err => { alert("오류"); showLoader(false); });
     }
 
     function getWeekNumber(d) {
@@ -307,21 +270,17 @@
 
                     todaysEvents.forEach(evt => {
                         if(evt.type === '휴무') {
-                            cellHtml += `<div class="evt-holiday" onclick="askDelete('${evt.id}', '${evt.reason}', '${evt.type}')">${evt.reason}</div>`;
+                            cellHtml += `<div class="evt-holiday">${evt.reason}</div>`;
                         } else {
                             let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : 'evt-etc');
                             let displayText = evt.name;
                             if (evt.type === '연차') displayText += " - 연차";
                             else if(evt.reason) displayText += " - " + evt.reason;
 
-                            // ★★★ [핵심] 글씨 표시 로직 수정 ★★★
-                            // 1. 일정의 첫날이거나
-                            // 2. 일요일(새로운 주 시작)이면 글씨 표시
                             let isStart = (thisDayStr === evt.start);
                             let isWeekStart = (i === 0);
                             let showText = isStart || isWeekStart;
-
-                            let content = showText ? displayText : "&nbsp;"; // 글씨가 없어도 높이 유지를 위해 공백
+                            let content = showText ? displayText : "&nbsp;"; 
 
                             let barClass = "";
                             if(isStart) barClass += " is-start";
@@ -365,9 +324,10 @@
         const endDate = document.getElementById('endDate').value;
         const reason = document.getElementById('reason').value;
 
-        if(type !== '휴무' && !name) { alert("이름 입력 필요"); return; }
-        if(!startDate || !endDate) { alert("날짜 입력 필요"); return; }
-        if(!reason) { alert("내용 입력 필요"); return; }
+        // ★★★ [수정] 휴무 버튼이 없으므로 이름 입력 필수 ★★★
+        if(!name) { alert("이름을 입력하세요."); return; }
+        if(!startDate || !endDate) { alert("날짜를 입력하세요."); return; }
+        if(!reason) { alert("내용을 입력하세요."); return; }
 
         showLoader(true);
         const data = { name, type, startDate, endDate, reason };
