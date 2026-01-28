@@ -13,88 +13,68 @@
         .calendar-header h2 { margin: 0; color: #333; font-size: 20px; font-weight: 800; }
         .btn-month { background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 16px; color: #555; }
         
+        /* 그리드 */
         .calendar-grid { display: grid; grid-template-columns: 20px repeat(7, 1fr); gap: 0; border-top: 1px solid #eee; border-left: 1px solid #eee; }
         
         .header-cell { background: #f8f9fa; padding: 6px 0; font-size: 11px; font-weight: bold; border-right: 1px solid #eee; border-bottom: 1px solid #eee; color: #333; text-align: center;}
         .header-cell.sun { color: #e74c3c; } .header-cell.sat { color: #2980b9; } 
         .week-label { display: flex; align-items: center; justify-content: center; font-size: 9px; color: #bbb; background: #fdfdfd; border-right: 1px solid #eee; border-bottom: 1px solid #eee; writing-mode: vertical-lr; transform: rotate(180deg); }
 
-        .day-cell { min-height: 60px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; padding: 0 0 3px 0; font-size: 11px; position: relative; background: #fff; display: flex; flex-direction: column; gap: 1px; }
+        .day-cell { min-height: 70px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; padding: 0; position: relative; display: flex; flex-direction: column; background: #fff; }
         .day-cell.sat { background-color: #fafbfd; } 
         .day-cell.sat .day-num { color: #2980b9; }    
         .day-cell.holiday-bg { background-color: #fdfafa !important; } 
         .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
         .day-cell.today { background-color: #fff !important; box-shadow: inset 0 0 0 1px #03c75a !important; z-index: 1; }
-        .day-num { display: block; margin-bottom: 1px; font-weight: bold; color: #333; text-align: left; padding: 3px 0 0 3px; font-size: 11px; }
+        
+        .day-header { display: flex; justify-content: space-between; padding: 2px 4px; height: 16px; align-items: center; }
+        .day-num { font-weight: bold; font-size: 11px; color: #333; }
+        
+        /* 공휴일 표시 (날짜 옆) */
+        .evt-holiday { font-size: 9px; font-weight: bold; color: #e74c3c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; cursor: pointer; }
 
-        /* 일정 막대 (이름만 표시, 넘침 허용) */
-        .event-bar { 
-            display: block; height: 14px; line-height: 14px; position: relative; margin-bottom: 1px; cursor: pointer;
+        /* 일정 막대 & 스페이서 */
+        .event-bar, .event-spacer { 
+            height: 14px; 
+            line-height: 14px; 
+            margin-bottom: 1px; 
+            position: relative; 
         }
+        
+        .event-bar {
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: white; font-size: 9px; font-weight: bold; 
+            z-index: 10; width: 100%; overflow: hidden;
+            text-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+
         .evt-content {
-            position: absolute; left: 4px; top: 0; white-space: nowrap; font-size: 9px; color: white; z-index: 10; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 98%; text-align: center; pointer-events: none;
         }
-        .event-bar.is-start { border-top-left-radius: 3px; border-bottom-left-radius: 3px; margin-left: 2px; }
-        .event-bar.is-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; margin-right: 2px; }
-        .event-bar:not(.is-start) { margin-left: -1px; } .event-bar:not(.is-end) { margin-right: -1px; }
-        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-etc { background: #f5a623; }
-        .evt-holiday { background: transparent !important; color: #e74c3c; font-size: 9px; font-weight: bold; text-align: left; margin-bottom: 1px; padding-left: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } 
 
-        /* ★★★ [수정] 한 줄 리스트 스타일 ★★★ */
+        .event-bar.is-start { border-top-left-radius: 3px; border-bottom-left-radius: 3px; margin-left: 2px; width: calc(100% - 2px); justify-content: flex-start; padding-left: 3px; }
+        .event-bar.is-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; margin-right: 2px; width: calc(100% - 2px); }
+        .event-bar.is-start.is-end { width: calc(100% - 4px); margin-left: 2px; margin-right: 2px; }
+        
+        .event-bar:not(.is-start):not(.is-end) { margin-left: -1px; margin-right: -1px; width: calc(100% + 2px); }
+        .event-bar:not(.is-start).is-end { margin-left: -1px; width: calc(100% + 1px); }
+        .event-bar.is-start:not(.is-end) { margin-right: -1px; width: calc(100% + 1px); }
+
+        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-etc { background: #f5a623; }
+
+        /* 리스트 스타일 */
         .monthly-list-container { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .list-header { font-size: 15px; font-weight: 800; color: #333; margin-bottom: 10px; display: flex; align-items: center; }
         
-        .list-item { 
-            background: #fff; 
-            border-bottom: 1px solid #f1f1f1; 
-            padding: 12px 5px; 
-            display: flex; /* 가로 배치 */
-            align-items: center; /* 세로 중앙 정렬 */
-            gap: 8px; /* 요소 간 간격 */
-            font-size: 13px;
-        }
+        .list-item { background: #fff; border-bottom: 1px solid #f1f1f1; padding: 12px 5px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
         .list-item:last-child { border-bottom: none; }
-        
-        .list-date { 
-            font-size: 11px; 
-            color: #555; 
-            font-weight: bold; 
-            background: #f1f3f5; 
-            padding: 3px 6px; 
-            border-radius: 4px; 
-            white-space: nowrap; /* 줄바꿈 방지 */
-        }
-        
-        .list-content-wrapper {
-            flex: 1; /* 남은 공간 모두 차지 */
-            display: flex;
-            align-items: center;
-            overflow: hidden; /* 넘치는 글자 숨김 */
-            white-space: nowrap;
-        }
-
+        .list-date { font-size: 11px; color: #555; font-weight: bold; background: #f1f3f5; padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
+        .list-content-wrapper { flex: 1; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
         .list-name { font-weight: bold; color: #333; margin-right: 5px; }
-        .list-reason { 
-            color: #888; 
-            font-size: 12px; 
-            overflow: hidden; 
-            text-overflow: ellipsis; /* 말줄임표(...) */
-        }
-
-        .list-badge { 
-            font-size: 10px; 
-            padding: 4px 6px; 
-            border-radius: 4px; 
-            color: white; 
-            font-weight: bold; 
-            white-space: nowrap; 
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .badge-trip { background: #4a90e2; }
-        .badge-vacation { background: #e74c3c; }
-        .badge-etc { background: #f5a623; }
+        .list-reason { color: #888; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+        .list-badge { font-size: 10px; padding: 4px 6px; border-radius: 4px; color: white; font-weight: bold; white-space: nowrap; min-width: 30px; text-align: center; }
+        .badge-trip { background: #4a90e2; } .badge-vacation { background: #e74c3c; } .badge-etc { background: #f5a623; }
 
         /* 입력 폼 */
         hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
@@ -180,7 +160,18 @@
         fetch(SCRIPT_URL + "?action=read")
         .then(res => res.json())
         .then(data => {
-            dbEvents = data.events;
+            let events = data.events || [];
+            let uniqueEvents = [];
+            let seenIds = new Set();
+            events.forEach(evt => {
+                let uniqueKey = evt.id ? evt.id : `${evt.name}-${evt.start}-${evt.end}`;
+                if (!seenIds.has(uniqueKey)) {
+                    seenIds.add(uniqueKey);
+                    uniqueEvents.push(evt);
+                }
+            });
+            dbEvents = uniqueEvents;
+
             if(data.holidays && data.holidays.length > 10) { try { HOLIDAYS = JSON.parse(data.holidays); } catch(e) { HOLIDAYS = DEFAULT_HOLIDAYS; } }
             renderCalendar(); 
             showLoader(false);
@@ -195,6 +186,7 @@
         return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
     }
 
+    // ★★★ [PC스타일 로직 적용] 끊김 방지 & 월초 텍스트 표시 ★★★
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -211,70 +203,113 @@
             calendarEl.innerHTML += `<div class="${className}">${d}</div>`;
         });
 
-        const firstDayObj = new Date(year, month, 1);
-        const firstDay = firstDayObj.getDay();
+        const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
-
         let currentDay = 1;
         
-        while(currentDay <= lastDate) {
-            let weekStartObj = new Date(year, month, currentDay);
-            let weekNum = getWeekNumber(weekStartObj);
-            calendarEl.innerHTML += `<div class="week-label">WK${weekNum}</div>`;
+        // 주 단위 루프 (끊김 방지)
+        for(let w=0; w<6; w++) {
+            if (currentDay > lastDate) break;
 
+            let currentWeekStart = new Date(year, month, currentDay - (w===0 ? firstDay : 0));
+            let currentWeekEnd = new Date(currentWeekStart); currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+            
+            let weekStartStr = currentWeekStart.toISOString().slice(0,10);
+            let weekEndStr = currentWeekEnd.toISOString().slice(0,10);
+
+            calendarEl.innerHTML += `<div class="week-label">W${getWeekNumber(currentWeekStart)}</div>`;
+
+            // 이번 주에 걸치는 일정
+            let eventsInWeek = dbEvents.filter(e => e.type !== '휴무' && e.end >= weekStartStr && e.start <= weekEndStr);
+            
+            // 정렬 (긴 일정 -> 시작일)
+            eventsInWeek.sort((a, b) => {
+                let lenA = new Date(a.end) - new Date(a.start);
+                let lenB = new Date(b.end) - new Date(b.start);
+                if (lenA !== lenB) return lenB - lenA; 
+                return a.start.localeCompare(b.start);
+            });
+
+            // 슬롯 할당 (테트리스)
+            let slots = Array.from({length: 7}, () => []); 
+            
+            eventsInWeek.forEach(evt => {
+                let s = new Date(evt.start) < currentWeekStart ? currentWeekStart : new Date(evt.start);
+                let e = new Date(evt.end) > currentWeekEnd ? currentWeekEnd : new Date(evt.end);
+                
+                let startIdx = Math.floor((s - currentWeekStart) / (1000*60*60*24));
+                let endIdx = Math.floor((e - currentWeekStart) / (1000*60*60*24));
+                
+                let row = 0;
+                while(true) {
+                    let isFree = true;
+                    for(let d = startIdx; d <= endIdx; d++) {
+                        if (d >= 0 && d <= 6 && slots[d][row]) { isFree = false; break; }
+                    }
+                    if(isFree) break;
+                    row++;
+                }
+                for(let d = startIdx; d <= endIdx; d++) {
+                    if (d >= 0 && d <= 6) slots[d][row] = evt;
+                }
+            });
+
+            // 렌더링
             for(let i=0; i<7; i++) {
-                if(currentDay <= lastDate && (currentDay > 1 || i >= firstDay)) {
-                    let isToday = (year === new Date().getFullYear() && month === new Date().getMonth() && currentDay === new Date().getDate()) ? 'today' : '';
-                    let thisDayStr = `${year}-${String(month+1).padStart(2,'0')}-${String(currentDay).padStart(2,'0')}`;
-                    let holidayName = HOLIDAYS[thisDayStr];
-                    let isRedDay = (i === 0 || holidayName) ? true : false;
-                    let bgClass = ''; 
-                    let numColor = '';
-
-                    dbEvents.forEach(evt => { if(evt.type === '휴무' && thisDayStr >= evt.start && thisDayStr <= evt.end) { bgClass = 'holiday-bg'; isRedDay = true; } });
-                    if(isRedDay) { bgClass = 'holiday-bg'; numColor = 'style="color:#e74c3c"'; }
-                    else if(i === 6) { numColor = 'style="color:#2980b9"'; bgClass = 'sat'; }
-
-                    let cellHtml = `<div class="day-cell ${bgClass} ${isToday}">`;
-                    cellHtml += `<span class="day-num" ${numColor}>${currentDay}</span>`;
+                if((w===0 && i<firstDay) || currentDay > lastDate) {
+                    calendarEl.innerHTML += `<div style="border-bottom:1px solid #eee; border-right:1px solid #eee; background:#fafafa;"></div>`;
+                    if (!(w===0 && i<firstDay)) currentDay++;
+                } else {
+                    let dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(currentDay).padStart(2,'0')}`;
+                    let isToday = (new Date().toISOString().slice(0,10) === dateStr) ? 'today' : '';
+                    let holidayName = HOLIDAYS[dateStr];
                     
-                    if(holidayName) cellHtml += `<div class="evt-holiday">${holidayName}</div>`;
+                    dbEvents.forEach(evt => { if(evt.type === '휴무' && dateStr >= evt.start && dateStr <= evt.end) holidayName = evt.reason; });
+                    
+                    let bgClass = ''; let numColor = '';
+                    if(i===0 || holidayName) { bgClass='holiday-bg'; numColor='style="color:#e74c3c"'; }
+                    else if(i===6) { numColor='style="color:#2980b9"'; bgClass='sat'; }
 
-                    let dayEvents = dbEvents.filter(evt => thisDayStr >= evt.start && thisDayStr <= evt.end);
-                    dayEvents.sort((a, b) => {
-                        if (a.start !== b.start) return a.start.localeCompare(b.start);
-                        if (a.end !== b.end) return b.end.localeCompare(a.end);
-                        return a.name.localeCompare(b.name);
-                    });
+                    let cellHtml = `<div class="day-cell ${bgClass} ${isToday}">
+                                    <div class="day-header">
+                                        <span class="day-num" ${numColor}>${currentDay}</span>
+                                        ${holidayName ? `<span class="evt-holiday">${holidayName}</span>` : ''}
+                                    </div>`;
 
-                    dayEvents.forEach(evt => {
-                        if(evt.type === '휴무') {
-                            cellHtml += `<div class="evt-holiday">${evt.reason}</div>`;
-                        } else {
+                    let maxRow = 0;
+                    slots[i].forEach((_, idx) => maxRow = Math.max(maxRow, idx));
+
+                    for(let r=0; r<=maxRow; r++) {
+                        let evt = slots[i][r];
+                        if (evt) {
                             let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : 'evt-etc');
-                            
-                            // ★★★ [수정] 달력에는 오직 이름만 표시 ★★★
                             let displayText = evt.name; 
 
-                            let isStart = (thisDayStr === evt.start);
-                            let isWeekStart = (i === 0);
-                            let showText = isStart || isWeekStart;
+                            let isStart = (dateStr === evt.start) || (i === 0);
+                            let isEnd = (dateStr === evt.end) || (i === 6);
+                            
+                            // ★★★ [핵심] 월 변경 시 텍스트 표시 (매월 1일) ★★★
+                            let isMonthStart = (currentDay === 1);
+                            let showText = isStart || isMonthStart;
+                            if (i === 0 && dateStr > evt.start) showText = true; // 일요일 표시
+
                             let contentHtml = showText ? `<span class="evt-content">${displayText}</span>` : "";
 
                             let barClass = "";
-                            if(isStart) barClass += " is-start";
-                            if(thisDayStr === evt.end) barClass += " is-end";
+                            if(dateStr === evt.start) barClass += " is-start";
+                            if(dateStr === evt.end) barClass += " is-end";
 
                             cellHtml += `<div class="event-bar ${colorClass} ${barClass}" onclick="askDelete('${evt.id}', '${evt.name}', '${evt.type}', '${evt.end}')">
                                             ${contentHtml}
                                          </div>`;
+                        } else {
+                            cellHtml += `<div class="event-spacer"></div>`;
                         }
-                    });
+                    }
+                    
                     cellHtml += `</div>`;
                     calendarEl.innerHTML += cellHtml;
                     currentDay++;
-                } else {
-                    calendarEl.innerHTML += `<div style="border-bottom:1px solid #eee; border-right:1px solid #eee; background:#fafafa;"></div>`;
                 }
             }
         }
@@ -282,7 +317,6 @@
         renderMonthlyList(year, month);
     }
 
-    // ★★★ [신규] 한 줄 리스트 생성 함수 ★★★
     function renderMonthlyList(year, month) {
         const listEl = document.getElementById('monthlyList');
         listEl.innerHTML = '';
