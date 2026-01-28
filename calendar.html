@@ -5,48 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>스마트 근태 달력</title>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 10px; background: #f0f2f5; margin: 0; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, sans-serif; padding: 5px; background: #f0f2f5; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .calendar-header h2 { margin: 0; color: #333; font-size: 22px; font-weight: 800; }
-        .btn-month { background: none; border: 1px solid #ddd; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 18px; color: #555; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .calendar-header h2 { margin: 0; color: #333; font-size: 20px; font-weight: 800; }
+        .btn-month { background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 16px; color: #555; }
         
-        .calendar-grid { display: grid; grid-template-columns: 25px repeat(7, 1fr); gap: 0; border-top: 1px solid #eee; border-left: 1px solid #eee; }
-        .header-cell { background: #f8f9fa; padding: 8px 0; font-size: 13px; font-weight: bold; border-right: 1px solid #eee; border-bottom: 1px solid #eee; color: #333; text-align: center;}
-        .header-cell.sun { color: #e74c3c; } .header-cell.sat { color: #2980b9; } 
-        .week-label { display: flex; align-items: center; justify-content: center; font-size: 10px; color: #bbb; background: #fdfdfd; border-right: 1px solid #eee; border-bottom: 1px solid #eee; writing-mode: vertical-lr; transform: rotate(180deg); }
+        .calendar-grid { display: grid; grid-template-columns: 20px repeat(7, 1fr); gap: 0; border-top: 1px solid #eee; border-left: 1px solid #eee; }
+        
+        .header-cell { background: #f8f9fa; padding: 6px 0; font-size: 11px; font-weight: bold; border-right: 1px solid #eee; border-bottom: 1px solid #eee; color: #333; text-align: center;}
+        .header-cell.sun { color: #e74c3c; } 
+        .header-cell.sat { color: #2980b9; } 
 
-        .day-cell { min-height: 100px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; padding: 0; padding-bottom: 5px; font-size: 13px; position: relative; background: #fff; display: flex; flex-direction: column; gap: 1px; }
-        .day-cell.sat { background-color: #fafbfd; } .day-cell.sat .day-num { color: #2980b9; }    
-        .day-cell.holiday-bg { background-color: #fdfafa !important; } .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
-        .day-cell.today { background-color: #fff !important; box-shadow: inset 0 0 0 2px #03c75a !important; z-index: 1; }
-        .day-num { display: block; margin-bottom: 2px; font-weight: bold; color: #333; text-align: left; padding: 5px 0 0 5px; }
+        .week-label { display: flex; align-items: center; justify-content: center; font-size: 9px; color: #bbb; background: #fdfdfd; border-right: 1px solid #eee; border-bottom: 1px solid #eee; writing-mode: vertical-lr; transform: rotate(180deg); }
 
-        .event-bar { 
-            display: block; font-size: 11px; color: white; padding: 3px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; text-align: left; height: 16px; line-height: 16px; position: relative;
+        .day-cell { 
+            min-height: 70px; 
+            border-right: 1px solid #eee; 
+            border-bottom: 1px solid #eee; 
+            padding: 0; 
+            padding-bottom: 3px;
+            font-size: 11px; 
+            position: relative; 
+            background: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1px; 
         }
-        .event-bar.is-start { border-top-left-radius: 4px; border-bottom-left-radius: 4px; margin-left: 3px; }
-        .event-bar.is-end { border-top-right-radius: 4px; border-bottom-right-radius: 4px; margin-right: 3px; }
-        .event-bar:not(.is-start) { margin-left: -1px; padding-left: 8px; } 
-        .event-bar:not(.is-end) { margin-right: -1px; padding-right: 8px; }
-        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-etc { background: #f5a623; }
         
-        .evt-holiday { background: transparent !important; color: #e74c3c; font-size: 11px; font-weight: bold; text-align: left; margin-bottom: 2px; padding-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; } 
+        .day-cell.sat { background-color: #fafbfd; } 
+        .day-cell.sat .day-num { color: #2980b9; }    
+        .day-cell.holiday-bg { background-color: #fdfafa !important; } 
+        .day-cell.holiday-bg .day-num { color: #e74c3c !important; }
+        .day-cell.today { background-color: #fff !important; box-shadow: inset 0 0 0 1px #03c75a !important; z-index: 1; }
         
-        hr { border: 0; border-top: 1px solid #eee; margin: 25px 0; }
-        h3 { margin: 0 0 15px 0; color: #333; font-size: 18px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 13px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 0; font-size: 15px; box-sizing: border-box; appearance: none; }
-        .type-group { display: flex; gap: 8px; }
-        .radio-label { flex: 1; text-align: center; padding: 12px 5px; border: 1px solid #ddd; cursor: pointer; background: #fff; font-size: 13px; white-space: nowrap; }
+        .day-num { display: block; margin-bottom: 1px; font-weight: bold; color: #333; text-align: left; padding: 3px 0 0 3px; font-size: 11px; }
+
+        /* ★★★ [핵심 수정] 글씨가 칸을 넘어가도록 설정 ★★★ */
+        .event-bar { 
+            display: block; 
+            height: 14px; 
+            line-height: 14px;
+            position: relative;
+            margin-bottom: 1px;
+            cursor: pointer;
+            /* overflow: hidden을 제거하여 글씨가 밖으로 나가게 함 */
+        }
+        
+        /* 텍스트 래퍼: 절대 위치로 띄워서 칸 너비 무시 */
+        .evt-content {
+            position: absolute;
+            left: 4px;
+            top: 0;
+            white-space: nowrap;
+            font-size: 9px;
+            color: white;
+            z-index: 10; /* 글씨가 다른 요소 위에 뜨도록 */
+            pointer-events: none; /* 클릭은 뒤쪽 바가 받도록 */
+            text-shadow: 0 0 2px rgba(0,0,0,0.2); /* 가독성 위해 그림자 살짝 */
+        }
+
+        .event-bar.is-start { border-top-left-radius: 3px; border-bottom-left-radius: 3px; margin-left: 2px; }
+        .event-bar.is-end { border-top-right-radius: 3px; border-bottom-right-radius: 3px; margin-right: 2px; }
+        .event-bar:not(.is-start) { margin-left: -1px; } 
+        .event-bar:not(.is-end) { margin-right: -1px; }
+
+        .evt-trip { background: #4a90e2; } 
+        .evt-vacation { background: #e74c3c; } 
+        .evt-etc { background: #f5a623; }
+        
+        .evt-holiday { 
+            background: transparent !important; 
+            color: #e74c3c; 
+            font-size: 9px; 
+            font-weight: bold;
+            text-align: left;
+            margin-bottom: 1px;
+            padding-left: 3px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer;
+        } 
+        
+        hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+        h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 3px; font-weight: bold; color: #555; font-size: 12px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 0; font-size: 14px; box-sizing: border-box; appearance: none; }
+        
+        .type-group { display: flex; gap: 5px; }
+        .radio-label { flex: 1; text-align: center; padding: 10px 2px; border: 1px solid #ddd; cursor: pointer; background: #fff; font-size: 12px; white-space: nowrap; }
         .radio-label input { display: none; }
         input[type="radio"]:checked + span { font-weight: bold; }
+        
         .radio-label:has(input[value="출장"]:checked) { background: #eaf4ff; border-color: #4a90e2; color: #4a90e2; }
         .radio-label:has(input[value="연차"]:checked) { background: #ffeeee; border-color: #e74c3c; color: #e74c3c; }
         .radio-label:has(input[value="기타"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
-        .btn-submit { width: 100%; background: #03c75a; color: white; padding: 15px; border: none; border-radius: 0; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        .btn-submit { width: 100%; background: #03c75a; color: white; padding: 12px; border: none; border-radius: 0; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; }
     </style>
 </head>
@@ -60,12 +117,17 @@
         <h2 id="monthTitle"></h2>
         <button class="btn-month" onclick="changeMonth(1)">▶</button>
     </div>
+    
     <div class="calendar-grid" id="calendar"></div>
 
     <hr>
 
     <h3>📝 일정 등록</h3>
-    <div class="form-group"><label>직원 이름</label><input type="text" id="name" placeholder="이름 입력"></div>
+    <div class="form-group">
+        <label>직원 이름</label>
+        <input type="text" id="name" placeholder="이름 입력">
+    </div>
+
     <div class="form-group">
         <label>구분</label>
         <div class="type-group">
@@ -74,17 +136,20 @@
             <label class="radio-label"><input type="radio" name="type" value="기타"><span>📝 기타</span></label>
         </div>
     </div>
+
     <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
     <div class="form-group"><label>종료일</label><input type="date" id="endDate"></div>
-    <div class="form-group"><label>상세 내용 (목적지 등)</label><input type="text" id="reason" placeholder="예: 부산 출장 / 개인 사정"></div>
+    <div class="form-group"><label>상세 내용</label><input type="text" id="reason" placeholder="목적지 / 사유"></div>
+
     <button class="btn-submit" onclick="submitData()">등록하기</button>
 </div>
 
 <script>
-    // ★★★ [설정] 스크립트 URL 및 관리자 비밀번호 ★★★
+    // ★★★ [중요] 배포 URL 입력 ★★★
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj1RhofZM8Kat7VUk-MZ9oNCgiTMn_Mi3inSWFDy-hbB1oDOCl4IpZGlcNH_gDxylQig/exec";
-    const ADMIN_PASSWORD = "1234"; // ← 이 비밀번호를 바꾸세요!
+    const ADMIN_PASSWORD = "1234"; 
 
+    // 공휴일 목록
     const DEFAULT_HOLIDAYS = {
         "2025-01-01": "신정", "2025-01-27": "대체휴일", "2025-01-28": "설날", "2025-01-29": "설날 연휴", "2025-01-30": "설날 연휴",
         "2025-03-01": "삼일절", "2025-03-03": "대체휴일", "2025-05-05": "어린이날", "2025-05-06": "대체휴일", "2025-06-06": "현충일",
@@ -140,9 +205,12 @@
             calendarEl.innerHTML += `<div class="${className}">${d}</div>`;
         });
 
-        const firstDay = new Date(year, month, 1).getDay();
+        const firstDayObj = new Date(year, month, 1);
+        const firstDay = firstDayObj.getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
+
         let currentDay = 1;
+        let weekCount = 0;
         
         while(currentDay <= lastDate) {
             let weekStartObj = new Date(year, month, currentDay);
@@ -155,18 +223,28 @@
                     let thisDayStr = `${year}-${String(month+1).padStart(2,'0')}-${String(currentDay).padStart(2,'0')}`;
                     let holidayName = HOLIDAYS[thisDayStr];
                     let isRedDay = (i === 0 || holidayName) ? true : false;
-                    let bgClass = isRedDay ? 'holiday-bg' : (i === 6 ? 'sat' : ''); 
+                    let bgClass = ''; 
+                    let numColor = '';
 
                     dbEvents.forEach(evt => { if(evt.type === '휴무' && thisDayStr >= evt.start && thisDayStr <= evt.end) { bgClass = 'holiday-bg'; isRedDay = true; } });
+                    
+                    if(isRedDay) { bgClass = 'holiday-bg'; numColor = 'style="color:#e74c3c"'; }
+                    else if(i === 6) { numColor = 'style="color:#2980b9"'; bgClass = 'sat'; }
 
                     let cellHtml = `<div class="day-cell ${bgClass} ${isToday}">`;
-                    let numColor = isRedDay ? 'style="color:#e74c3c"' : (i === 6 ? 'style="color:#2980b9"' : '');
                     cellHtml += `<span class="day-num" ${numColor}>${currentDay}</span>`;
                     
                     if(holidayName) cellHtml += `<div class="evt-holiday">${holidayName}</div>`;
 
+                    // 일정 렌더링
                     let todaysEvents = dbEvents.filter(evt => thisDayStr >= evt.start && thisDayStr <= evt.end);
-                    todaysEvents.sort((a,b) => a.id.localeCompare(b.id));
+                    
+                    // ★★★ [긴 일정 우선 정렬] ★★★
+                    todaysEvents.sort((a, b) => {
+                        if (a.start !== b.start) return a.start.localeCompare(b.start);
+                        if (a.end !== b.end) return b.end.localeCompare(a.end); // 종료일 늦은게 위로
+                        return a.name.localeCompare(b.name);
+                    });
 
                     todaysEvents.forEach(evt => {
                         if(evt.type === '휴무') {
@@ -177,15 +255,28 @@
                             if (evt.type === '연차') displayText += " - 연차";
                             else if(evt.reason) displayText += " - " + evt.reason;
 
-                            let isStart = (thisDayStr === evt.start) || (i === 0);
+                            // ★★★ [핵심] 텍스트 흐름 로직 ★★★
+                            // 일정이 시작하는 날이거나, 일요일(새 줄의 시작)이면 텍스트를 표시
+                            let isStart = (thisDayStr === evt.start);
+                            let isWeekStart = (i === 0);
+                            let showText = isStart || isWeekStart;
+
+                            let contentHtml = "";
+                            if(showText) {
+                                // 글씨를 absolute로 띄워서 칸 너비 제한을 무시하고 옆으로 흐르게 함
+                                contentHtml = `<span class="evt-content">${displayText}</span>`;
+                            }
+
                             let barClass = "";
-                            if(thisDayStr === evt.start) barClass += " is-start";
+                            if(isStart) barClass += " is-start";
                             if(thisDayStr === evt.end) barClass += " is-end";
-                            
-                            // ★ 삭제 함수 호출 시 날짜 정보도 같이 확인
-                            cellHtml += `<span class="event-bar ${colorClass} ${barClass}" onclick="askDelete('${evt.id}', '${evt.name}', '${evt.type}', '${evt.end}')">${isStart ? displayText : '&nbsp;'}</span>`;
+
+                            cellHtml += `<div class="event-bar ${colorClass} ${barClass}" onclick="askDelete('${evt.id}', '${evt.name}', '${evt.type}', '${evt.end}')">
+                                            ${contentHtml}
+                                         </div>`;
                         }
                     });
+
                     cellHtml += `</div>`;
                     calendarEl.innerHTML += cellHtml;
                     currentDay++;
@@ -201,40 +292,21 @@
         renderCalendar();
     }
 
-    // ★★★ [핵심] 과거 데이터 삭제 방지 및 비밀번호 기능 ★★★
     function askDelete(id, name, type, endDateStr) {
         if(!id || id.startsWith('manual_') === false) return; 
-
-        // 1. 날짜 비교 (오늘 이전인지 확인)
-        let today = new Date();
-        today.setHours(0,0,0,0); // 오늘 0시 0분으로 설정
+        
+        let today = new Date(); today.setHours(0,0,0,0);
         let eventEndDate = new Date(endDateStr);
-
-        // 일정이 이미 끝난 날짜(과거)라면 비밀번호 요구
         if (eventEndDate < today) {
             let inputPwd = prompt(`⛔ 지난 일정(${endDateStr})입니다.\n삭제하려면 관리자 비밀번호를 입력하세요:`);
-            if (inputPwd !== ADMIN_PASSWORD) {
-                alert("❌ 비밀번호가 틀렸습니다. 삭제할 수 없습니다.");
-                return;
-            }
+            if (inputPwd !== ADMIN_PASSWORD) { alert("❌ 비밀번호가 틀렸습니다."); return; }
         }
-
-        // 2. 삭제 진행
+        
         if(confirm(`[${type}] ${name} 일정을 삭제하시겠습니까?`)) {
             showLoader(true);
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "delete", id: id })
-            })
-            .then(() => {
-                alert("🗑️ 삭제되었습니다.");
-                setTimeout(loadEvents, 1000);
-            })
-            .catch(err => {
-                alert("삭제 오류: " + err);
-                showLoader(false);
-            });
+            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", id: id }) })
+            .then(() => { alert("🗑️ 삭제되었습니다."); setTimeout(loadEvents, 1000); })
+            .catch(err => { alert("오류"); showLoader(false); });
         }
     }
 
@@ -245,7 +317,7 @@
         const endDate = document.getElementById('endDate').value;
         const reason = document.getElementById('reason').value;
 
-        if(!name) { alert("이름을 입력하세요."); return; }
+        if(type !== '휴무' && !name) { alert("이름을 입력하세요."); return; }
         if(!startDate || !endDate) { alert("날짜를 입력하세요."); return; }
         if(!reason) { alert("내용을 입력하세요."); return; }
 
