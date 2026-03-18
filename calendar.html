@@ -61,7 +61,8 @@
         .event-bar:not(.is-start).is-end { margin-left: -1px; width: calc(100% + 1px); }
         .event-bar.is-start:not(.is-end) { margin-right: -1px; width: calc(100% + 1px); }
 
-        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-etc { background: #f5a623; }
+        /* ★ 반차 전용 컬러 (주황색) */
+        .evt-trip { background: #4a90e2; } .evt-vacation { background: #e74c3c; } .evt-half { background: #d35400; } .evt-etc { background: #f5a623; }
 
         /* 리스트 스타일 */
         .monthly-list-container { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
@@ -74,7 +75,9 @@
         .list-name { font-weight: bold; color: #333; margin-right: 5px; }
         .list-reason { color: #888; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
         .list-badge { font-size: 10px; padding: 4px 6px; border-radius: 4px; color: white; font-weight: bold; white-space: nowrap; min-width: 30px; text-align: center; }
-        .badge-trip { background: #4a90e2; } .badge-vacation { background: #e74c3c; } .badge-etc { background: #f5a623; }
+        
+        /* ★ 리스트 배지용 반차 컬러 */
+        .badge-trip { background: #4a90e2; } .badge-vacation { background: #e74c3c; } .badge-half { background: #d35400; } .badge-etc { background: #f5a623; }
 
         /* 입력 폼 */
         hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
@@ -86,9 +89,13 @@
         .radio-label { flex: 1; text-align: center; padding: 10px 2px; border: 1px solid #ddd; cursor: pointer; background: #fff; font-size: 12px; white-space: nowrap; }
         .radio-label input { display: none; }
         input[type="radio"]:checked + span { font-weight: bold; }
+        
+        /* ★ 라디오 버튼 선택 시 반차 색상 설정 */
         .radio-label:has(input[value="출장"]:checked) { background: #eaf4ff; border-color: #4a90e2; color: #4a90e2; }
         .radio-label:has(input[value="연차"]:checked) { background: #ffeeee; border-color: #e74c3c; color: #e74c3c; }
-        .radio-label:has(input[value="기타"]:checked) { background: #fff0f0; border-color: #c0392b; color: #c0392b; }
+        .radio-label:has(input[value="반차"]:checked) { background: #fff4e6; border-color: #d35400; color: #d35400; }
+        .radio-label:has(input[value="기타"]:checked) { background: #fffbf0; border-color: #f5a623; color: #f5a623; }
+        
         .btn-submit { width: 100%; background: #03c75a; color: white; padding: 12px; border: none; border-radius: 0; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 20px; font-weight: bold; }
     </style>
@@ -119,12 +126,13 @@
         <div class="type-group">
             <label class="radio-label"><input type="radio" name="type" value="출장" checked><span>✈️ 출장</span></label>
             <label class="radio-label"><input type="radio" name="type" value="연차"><span>🏖️ 연차</span></label>
+            <label class="radio-label"><input type="radio" name="type" value="반차"><span>🌗 반차</span></label>
             <label class="radio-label"><input type="radio" name="type" value="기타"><span>📝 기타</span></label>
         </div>
     </div>
     <div class="form-group"><label>시작일</label><input type="date" id="startDate"></div>
     <div class="form-group"><label>종료일</label><input type="date" id="endDate"></div>
-    <div class="form-group"><label>상세 내용</label><input type="text" id="reason" placeholder="목적지 / 사유"></div>
+    <div class="form-group"><label>상세 내용</label><input type="text" id="reason" placeholder="목적지 / 사유 (오전반차 등)"></div>
     <button class="btn-submit" onclick="submitData()">등록하기</button>
 </div>
 
@@ -186,7 +194,6 @@
         return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
     }
 
-    // ★★★ [PC스타일 로직 적용] 끊김 방지 & 월초 텍스트 표시 ★★★
     function renderCalendar() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -207,7 +214,6 @@
         const lastDate = new Date(year, month + 1, 0).getDate();
         let currentDay = 1;
         
-        // 주 단위 루프 (끊김 방지)
         for(let w=0; w<6; w++) {
             if (currentDay > lastDate) break;
 
@@ -219,10 +225,8 @@
 
             calendarEl.innerHTML += `<div class="week-label">W${getWeekNumber(currentWeekStart)}</div>`;
 
-            // 이번 주에 걸치는 일정
             let eventsInWeek = dbEvents.filter(e => e.type !== '휴무' && e.end >= weekStartStr && e.start <= weekEndStr);
             
-            // 정렬 (긴 일정 -> 시작일)
             eventsInWeek.sort((a, b) => {
                 let lenA = new Date(a.end) - new Date(a.start);
                 let lenB = new Date(b.end) - new Date(b.start);
@@ -230,7 +234,6 @@
                 return a.start.localeCompare(b.start);
             });
 
-            // 슬롯 할당 (테트리스)
             let slots = Array.from({length: 7}, () => []); 
             
             eventsInWeek.forEach(evt => {
@@ -254,7 +257,6 @@
                 }
             });
 
-            // 렌더링
             for(let i=0; i<7; i++) {
                 if((w===0 && i<firstDay) || currentDay > lastDate) {
                     calendarEl.innerHTML += `<div style="border-bottom:1px solid #eee; border-right:1px solid #eee; background:#fafafa;"></div>`;
@@ -282,16 +284,16 @@
                     for(let r=0; r<=maxRow; r++) {
                         let evt = slots[i][r];
                         if (evt) {
-                            let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : 'evt-etc');
+                            // ★ 달력 막대 색상
+                            let colorClass = evt.type === '출장' ? 'evt-trip' : (evt.type === '연차' ? 'evt-vacation' : (evt.type === '반차' ? 'evt-half' : 'evt-etc'));
                             let displayText = evt.name; 
 
                             let isStart = (dateStr === evt.start) || (i === 0);
                             let isEnd = (dateStr === evt.end) || (i === 6);
                             
-                            // ★★★ [핵심] 월 변경 시 텍스트 표시 (매월 1일) ★★★
                             let isMonthStart = (currentDay === 1);
                             let showText = isStart || isMonthStart;
-                            if (i === 0 && dateStr > evt.start) showText = true; // 일요일 표시
+                            if (i === 0 && dateStr > evt.start) showText = true;
 
                             let contentHtml = showText ? `<span class="evt-content">${displayText}</span>` : "";
 
@@ -338,7 +340,8 @@
         }
 
         monthlyEvents.forEach(evt => {
-            let badgeClass = evt.type === '출장' ? 'badge-trip' : (evt.type === '연차' ? 'badge-vacation' : 'badge-etc');
+            // ★ 리스트 배지 색상
+            let badgeClass = evt.type === '출장' ? 'badge-trip' : (evt.type === '연차' ? 'badge-vacation' : (evt.type === '반차' ? 'badge-half' : 'badge-etc'));
             let dateText = `${evt.start.slice(5)} ~ ${evt.end.slice(5)}`;
             if(evt.start === evt.end) dateText = evt.start.slice(5);
 
