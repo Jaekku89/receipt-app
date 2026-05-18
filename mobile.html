@@ -37,9 +37,12 @@
         .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; }
         .btn-submit.editing { background: #e67e22; }
         
+        /* 버튼 2개 나란히 배치하기 위한 스타일 수정 */
         .camera-wrapper { margin-top: 5px; }
-        .btn-camera { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px; width: 100%; text-align: center; }
-        .btn-camera.active { background: #e8f8f5; border-color: var(--green); color: var(--green); }
+        .camera-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-camera-split { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px 5px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .btn-camera-split.active { background: #e8f8f5; border-color: var(--green); color: var(--green); }
+        
         #preview-area { display: none; text-align: center; margin-top: 10px; position: relative; background: #eee; border-radius: 8px; padding: 5px; }
         #preview-img { max-height: 200px; max-width: 100%; border-radius: 4px; }
         .btn-del-img { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 25px; height: 25px; border: none; cursor: pointer; }
@@ -106,8 +109,14 @@
             <div class="form-group full-width"><label>내역</label><input type="text" id="detail" placeholder="추가 설명 및 상세 내역" class="form-control"></div>
 
             <div class="camera-wrapper full-width">
-                <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this)">
-                <button class="btn btn-camera" id="btnCam" onclick="document.getElementById('fileInput').click()">📷 영수증 촬영 / 사진 선택</button>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+                <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleFile(this)">
+                
+                <div class="camera-btn-group">
+                    <button class="btn-camera-split" id="btnCamOnly" onclick="document.getElementById('cameraInput').click()">📷 즉시 카메라 촬영</button>
+                    <button class="btn-camera-split" id="btnGalOnly" onclick="document.getElementById('galleryInput').click()">📁 갤러리 사진 선택</button>
+                </div>
+                
                 <div id="preview-area">
                     <img id="preview-img" src="">
                     <button class="btn-del-img" onclick="clearImg()">×</button>
@@ -242,7 +251,9 @@
         document.getElementById('btnSubmit').innerText = "수정 완료";
         document.getElementById('btnSubmit').classList.add('editing');
         document.getElementById('btnCancel').style.display = 'block';
-        document.getElementById('btnCam').innerText = "📷 사진 변경 (선택)";
+        
+        document.getElementById('btnCamOnly').innerText = "📷 촬영 변경";
+        document.getElementById('btnGalOnly').innerText = "📁 사진 변경";
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -339,13 +350,17 @@
                     
                     document.getElementById('preview-img').src = currentImgBase64;
                     document.getElementById('preview-area').style.display = 'block';
-                    document.getElementById('btnCam').classList.add('active');
-                    document.getElementById('btnCam').innerText = "✅ 사진 준비됨";
+                    
+                    // 두 버튼 모두 활성화 시각적 피드백 처리
+                    document.getElementById('btnCamOnly').classList.add('active');
+                    document.getElementById('btnGalOnly').classList.add('active');
+                    document.getElementById('btnCamOnly').innerText = "✅ 사진 준비됨";
+                    document.getElementById('btnGalOnly').innerText = "✅ 사진 준비됨";
                     showLoader(false);
                 };
                 
                 img.onerror = function() {
-                    alert("이미지를 읽어오는데 실패했습니다. 일반 갤러리 앱에서 사진을 다시 선택해 보세요.");
+                    alert("이미지를 읽어오는데 실패했습니다. 다른 사진을 선택해 보세요.");
                     showLoader(false);
                 };
                 
@@ -364,9 +379,14 @@
     function clearImg() {
         currentImgBase64 = null;
         document.getElementById('preview-area').style.display = 'none';
-        document.getElementById('fileInput').value = '';
-        document.getElementById('btnCam').classList.remove('active');
-        document.getElementById('btnCam').innerText = "📷 영수증 촬영 / 사진 선택";
+        document.getElementById('cameraInput').value = '';
+        document.getElementById('galleryInput').value = '';
+        
+        document.getElementById('btnCamOnly').classList.remove('active');
+        document.getElementById('btnGalOnly').classList.remove('active');
+        
+        document.getElementById('btnCamOnly').innerText = isEditing ? "📷 촬영 변경" : "📷 즉시 카메라 촬영";
+        document.getElementById('btnGalOnly').innerText = isEditing ? "📁 사진 변경" : "📁 갤러리 사진 선택";
     }
 
     function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
