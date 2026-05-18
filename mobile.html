@@ -106,7 +106,7 @@
             <div class="form-group full-width"><label>내역</label><input type="text" id="detail" placeholder="추가 설명 및 상세 내역" class="form-control"></div>
 
             <div class="camera-wrapper full-width">
-                <input type="file" id="fileInput" accept="image/jpeg, image/png, image/jpg" style="display:none" onchange="handleFile(this)">
+                <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this)">
                 <button class="btn btn-camera" id="btnCam" onclick="document.getElementById('fileInput').click()">📷 영수증 촬영 / 사진 선택</button>
                 <div id="preview-area">
                     <img id="preview-img" src="">
@@ -310,7 +310,6 @@
         });
     }
 
-    // ★ [안드로이드 최적화 2] 비동기 처리 안정화 및 메모리 튕김 방지 개선
     function handleFile(input) {
         if(input.files && input.files[0]) {
             showLoader(true);
@@ -323,7 +322,6 @@
                     const cvs = document.createElement('canvas');
                     const ctx = cvs.getContext('2d');
                     
-                    // 안드로이드 저사양 폰 메모리 확보를 위해 최대 해상도를 800px로 제한축소
                     const maxW = 800;
                     let w = img.width;
                     let h = img.height;
@@ -337,7 +335,6 @@
                     cvs.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // 대용량 변환 에러 방지를 위해 압축률을 0.6으로 살짝 낮춰 전송 데이터 다이어트
                     currentImgBase64 = cvs.toDataURL('image/jpeg', 0.6);
                     
                     document.getElementById('preview-img').src = currentImgBase64;
@@ -347,7 +344,6 @@
                     showLoader(false);
                 };
                 
-                // 안드로이드 갤러리 캐싱 오류 방지를 위한 타임아웃 텀 부여
                 img.onerror = function() {
                     alert("이미지를 읽어오는데 실패했습니다. 일반 갤러리 앱에서 사진을 다시 선택해 보세요.");
                     showLoader(false);
