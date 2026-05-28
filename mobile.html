@@ -6,9 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2c3e50">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
-    <title>매입매출 관리 (안드로이드 최적화판)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link class="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1063/1063376.png">
+    <title>매입매출 관리 (안드로이드 실시간 공유판)</title>
     <style>
         :root { --primary: #2c3e50; --blue: #2980b9; --red: #c0392b; --orange: #d35400; --light: #f4f6f8; --border: #dfe6e9; --green: #27ae60; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 15px; background: var(--light); font-size: 14px; color: #333; -webkit-tap-highlight-color: transparent; }
@@ -90,12 +89,12 @@
 </head>
 <body>
 
-<div id="loader" class="loader-overlay"><div class="spinner"></div><div>처리 중...</div></div>
+<div id="loader" class="loader-overlay"><div class="spinner"></div><div>데이터 연동 중...</div></div>
 
 <div class="container">
     <div class="header">
         <h1>📊 매입매출 관리</h1>
-        <button class="btn btn-refresh" onclick="loadData()">🔄</button>
+        <button class="btn btn-refresh" onclick="loadAllData()">🔄</button>
     </div>
 
     <div class="input-section">
@@ -198,18 +197,17 @@ let isEditing = false;
 let editId = null;
 let currentSettingTarget = ''; 
 
-let defaultOptions = {
-    item: ['Novacast', 'AP&T', 'IDRA'],
-    user: ['홍길동', '김철수', '이영희']
+// 메모리 보관용 전역 설정 데이터 구조
+let serverSettings = {
+    item: [],
+    user: []
 };
 
 window.onload = function() {
     document.getElementById('date').valueAsDate = new Date();
-    initSelectOptions();
-    loadData();
+    loadAllData();
 };
 
-// 안전한 날짜 포맷팅 변환 함수 (누락되어 복원함)
 function getSafeDate(dateStr) {
     if(!dateStr) return { full: "", short: "" };
     const d = new Date(dateStr);
@@ -224,18 +222,37 @@ function getSafeDate(dateStr) {
     };
 }
 
-function initSelectOptions() {
-    ['item', 'user'].forEach(target => {
-        let options = localStorage.getItem('setting_' + target);
-        if (!options) {
-            options = defaultOptions[target];
-            options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
-            localStorage.setItem('setting_' + target, JSON.stringify(options));
-        } else {
-            options = JSON.parse(options);
-            options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
-        }
-        updateSelectUI(target, options);
+// 구글 시트 데이터와 공유 설정을 한 번에 같이 받아오는 마스터 로드 함수
+function loadAllData() {
+    if(SERVER_URL.includes("여기에")) { alert("URL 주소를 확인해주세요."); return; }
+    showLoader(true);
+    
+    // 1. 구글 시트 '설정' 탭 데이터 가져오기
+    fetch(SERVER_URL + "?action=readSettings")
+    .then(res => res.json())
+    .then(settingData => {
+        serverSettings.item = settingData.partners || [];
+        serverSettings.user = settingData.users || [];
+        
+        // 가져온 데이터 가나다/알파벳순 정렬 정비
+        serverSettings.item.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+        serverSettings.user.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+        
+        updateSelectUI('item', serverSettings.item);
+        updateSelectUI('user', serverSettings.user);
+        
+        // 2. 이어서 매입매출 거래내역 조회 데이터 가져오기
+        return fetch(SERVER_URL + "?action=read");
+    })
+    .then(res => res.json())
+    .then(data => {
+        db = data;
+        renderTable();
+        showLoader(false);
+    })
+    .catch(err => { 
+        alert("데이터 연동 실패: " + err); 
+        showLoader(false); 
     });
 }
 
@@ -252,7 +269,7 @@ function updateSelectUI(target, options) {
 
 function openSettingModal(target) {
     currentSettingTarget = target;
-    const titleText = target === 'item' ? '⚙️ 파트너사 편집' : '⚙️ 사용자 편집';
+    const titleText = target === 'item' ? '⚙️ 파트너사 편집 (공유)' : '⚙️ 사용자 편집 (공유)';
     document.getElementById('settingModalTitle').innerText = titleText;
     document.getElementById('newSettingItem').value = '';
     document.getElementById('settingModal').style.display = 'flex';
@@ -261,15 +278,12 @@ function openSettingModal(target) {
 
 function closeSettingModal() {
     document.getElementById('settingModal').style.display = 'none';
-    initSelectOptions(); 
 }
 
 function renderSettingList() {
     const listArea = document.getElementById('settingListArea');
     listArea.innerHTML = '';
-    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
-    
-    options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+    let options = serverSettings[currentSettingTarget];
     
     if(options.length === 0) {
         listArea.innerHTML = `<div style="padding:15px; color:#999; text-align:center;">등록된 항목이 없습니다.</div>`;
@@ -287,43 +301,54 @@ function renderSettingList() {
     });
 }
 
+// 설정 항목 추가 시 바로 구글 시트로 업데이트 처리를 날려 실시간 동기화
 function addSettingItem() {
     const input = document.getElementById('newSettingItem');
     const value = input.value.trim();
     if(!value) { alert('내용을 입력해주세요.'); return; }
     
-    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
+    let options = serverSettings[currentSettingTarget];
     if(options.includes(value)) { alert('이미 존재하는 항목입니다.'); return; }
     
     options.push(value);
     options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
     
-    localStorage.setItem('setting_' + currentSettingTarget, JSON.stringify(options));
+    saveSettingsToServer();
     input.value = '';
-    renderSettingList();
 }
 
 function deleteSettingItem(index) {
-    if(!confirm('해당 항목을 삭제하시겠습니까?')) return;
-    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
-    options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+    if(!confirm('해당 항목을 삭제하시겠습니까? 모두의 화면에서 삭제됩니다.')) return;
+    let options = serverSettings[currentSettingTarget];
     options.splice(index, 1);
-    localStorage.setItem('setting_' + currentSettingTarget, JSON.stringify(options));
-    renderSettingList();
+    
+    saveSettingsToServer();
 }
 
-function loadData() {
-    if(SERVER_URL.includes("여기에")) { alert("URL 주소를 확인해주세요."); return; }
+// 실시간 공유를 위해 구글 시트의 '설정' 탭으로 최종 데이터를 밀어넣는 함수
+function saveSettingsToServer() {
     showLoader(true);
-    fetch(SERVER_URL + "?action=read")
-    .then(res => res.json())
-    .then(data => {
-        db = data;
-        db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); 
-        renderTable();
+    const payload = {
+        action: "updateSettings",
+        partners: serverSettings.item,
+        users: serverSettings.user
+    };
+
+    fetch(SERVER_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(() => {
+        renderSettingList();
+        updateSelectUI(currentSettingTarget, serverSettings[currentSettingTarget]);
         showLoader(false);
     })
-    .catch(err => { alert("로드 실패: " + err); showLoader(false); });
+    .catch(err => {
+        alert("공유 설정 저장 오류: " + err);
+        showLoader(false);
+    });
 }
 
 function submitData() {
@@ -341,6 +366,7 @@ function submitData() {
         user: document.getElementById('user').value,
         item: item,
         client: document.getElementById('client').value,
+        location: "",
         payType: document.getElementById('payType').value,
         cardNo: document.getElementById('cardNo').value,
         detail: document.getElementById('detail').value, 
@@ -359,7 +385,7 @@ function submitData() {
     .then(() => {
         alert(isEditing ? "✅ 수정되었습니다." : "✅ 등록되었습니다.");
         cancelEdit();
-        loadData();
+        loadAllData();
     })
     .catch(err => { alert("오류: " + err); showLoader(false); });
 }
@@ -419,7 +445,8 @@ function cancelEdit() {
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('payType').value = '카드영수증';
     
-    initSelectOptions(); 
+    updateSelectUI('item', serverSettings.item);
+    updateSelectUI('user', serverSettings.user);
     clearImg();
 
     document.getElementById('formTitle').innerText = "📝 신규 등록";
@@ -434,7 +461,7 @@ function delEntry(id) {
     showLoader(true);
     fetch(SERVER_URL + "?action=delete&id=" + id)
     .then(res => res.json())
-    .then(() => { alert("삭제되었습니다."); loadData(); })
+    .then(() => { alert("삭제되었습니다."); loadAllData(); })
     .catch(() => { alert("오류"); showLoader(false); });
 }
 
@@ -443,6 +470,7 @@ function renderTable() {
     tbody.innerHTML = '';
 
     db.forEach(item => {
+        if(!item.ID) return;
         const val = parseInt(item.금액).toLocaleString();
         const dateShort = getSafeDate(item.날짜).short; 
         const typeClass = item.구분 === 'sales' ? 'col-sales' : 'col-exp';
@@ -450,11 +478,7 @@ function renderTable() {
         
         let imgBtn = `<span style="color:#ccc">-</span>`;
         if(item.이미지URL && item.이미지URL.includes('drive.google.com')) {
-            const idMatch = item.imagesURL ? null : item.이미지URL.match(/id=([^&]+)/);
-            if(idMatch) {
-                const thumb = `https://drive.google.com/thumbnail?sz=w1000&id=${idMatch[1]}`;
-                imgBtn = `<a href="#" class="receipt-btn" onclick="openImageModal('${thumb}')">보기</a>`;
-            }
+            imgBtn = `<a href="#" class="receipt-btn" onclick="openImageModal('${item.이미지URL}')">보기</a>`;
         }
 
         const tr = document.createElement('tr');
@@ -509,20 +533,12 @@ function handleFile(input) {
                 document.getElementById('btnGalOnly').innerText = "✅ 사진 준비됨";
                 showLoader(false);
             };
-            
             img.onerror = function() {
-                alert("이미지를 읽어오는데 실패했습니다. 다른 사진을 선택해 보세요.");
+                alert("이미지를 읽어오는데 실패했습니다.");
                 showLoader(false);
             };
-            
             img.src = e.target.result;
         };
-        
-        reader.onerror = function() {
-            alert("파일 읽기 오류가 발생했습니다.");
-            showLoader(false);
-        };
-        
         reader.readAsDataURL(file);
     }
 }
@@ -532,20 +548,17 @@ function clearImg() {
     document.getElementById('preview-area').style.display = 'none';
     document.getElementById('cameraInput').value = '';
     document.getElementById('galleryInput').value = '';
-    
     document.getElementById('btnCamOnly').classList.remove('active');
     document.getElementById('btnGalOnly').classList.remove('active');
-    
     document.getElementById('btnCamOnly').innerText = isEditing ? "📷 촬영 변경" : "📷 즉시 카메라 촬영";
     document.getElementById('btnGalOnly').innerText = isEditing ? "📁 사진 변경" : "📁 갤러리 사진 선택";
 }
 
 function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
-    function openImageModal(url) { 
-        document.getElementById('imageModal').style.display = 'flex'; 
-        document.getElementById('modalImg').src = url; 
-    }
+function openImageModal(url) { 
+    document.getElementById('imageModal').style.display = 'flex'; 
+    document.getElementById('modalImg').src = url; 
+}
 </script>
-
 </body>
 </html>
