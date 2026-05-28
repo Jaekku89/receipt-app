@@ -29,15 +29,19 @@
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
         
-        .form-group { display: flex; flex-direction: column; }
+        .form-group { display: flex; flex-direction: column; position: relative; }
         .form-group label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
-        .form-control { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; background: white; }
+        
+        .select-wrapper { display: flex; gap: 6px; width: 100%; box-sizing: border-box; }
+        .form-control { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; background: white; height: 48px; }
         .form-control:focus { border-color: var(--primary); outline: none; }
+        
+        .btn-setting { background: #e0e0e0; color: #333; padding: 0 12px; border-radius: 8px; font-size: 16px; border: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 48px; }
+        .btn-setting:active { background: #d0d0d0; }
 
-        .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; }
+        .btn-submit { background: var(--primary); color: white; font-size: 16px; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-submit.editing { background: #e67e22; }
         
-        /* 버튼 2개 나란히 배치하기 위한 스타일 수정 */
         .camera-wrapper { margin-top: 5px; }
         .camera-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .btn-camera-split { background: #ecf0f1; color: var(--primary); border: 2px dashed #bdc3c7; padding: 12px 5px; text-align: center; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; }
@@ -57,8 +61,8 @@
         .receipt-btn { background: #3498db; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; text-decoration: none; display: inline-block; }
         
         .actions { white-space: nowrap; }
-        .btn-edit { background: #f39c12; color: white; padding: 5px 8px; font-size: 12px; margin-right: 5px; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 12px; }
+        .btn-edit { background: #f39c12; color: white; padding: 5px 8px; font-size: 12px; margin-right: 5px; border: none; border-radius: 4px; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 12px; border: none; border-radius: 4px; }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -69,9 +73,19 @@
         .loader-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; flex-direction: column; }
-        .modal-content { max-width: 95%; max-height: 80%; object-fit: contain; }
-        .close-modal { position: absolute; top: 30px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 20px; }
+        
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-image-content { max-width: 95%; max-height: 80%; object-fit: contain; }
+        .close-modal { position: absolute; top: 20px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; padding: 10px; }
+
+        .setting-modal-content { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; max-height: 85vh; }
+        .setting-modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--primary); }
+        .setting-input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .setting-list { overflow-y: auto; flex: 1; border: 1px solid var(--border); border-radius: 8px; max-height: 250px; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 15px; }
+        .setting-item:last-child { border-bottom: none; }
+        .btn-item-del { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; font-weight: bold; padding: 0 5px; }
+        .btn-close-setting { background: var(--primary); color: white; width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 15px; font-weight: bold; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -95,13 +109,24 @@
             <div class="form-group"><label>구분</label><select id="moneyType" class="form-control"><option value="variable">지출매입 (-)</option><option value="sales">매출 (+)</option><option value="fixed">고정매입 (-)</option></select></div>
             
             <div class="form-group"><label>금액 (원)</label><input type="tel" id="amount" placeholder="0" class="form-control"></div>
-            <div class="form-group"><label>사용자</label><input type="text" id="user" placeholder="이름" class="form-control"></div>
             
-            <div class="form-group full-width"><label>파트너사</label><input type="text" id="item" placeholder="예: Novacast, AP&T, IDRA" class="form-control"></div>
+            <div class="form-group">
+                <label>사용자</label>
+                <div class="select-wrapper">
+                    <select id="user" class="form-control"></select>
+                    <button class="btn-setting" onclick="openSettingModal('user')">⚙️</button>
+                </div>
+            </div>
+            
+            <div class="form-group full-width">
+                <label>파트너사</label>
+                <div class="select-wrapper">
+                    <select id="item" class="form-control"></select>
+                    <button class="btn-setting" onclick="openSettingModal('item')">⚙️</button>
+                </div>
+            </div>
             
             <div class="form-group full-width"><label>고객사</label><input type="text" id="client" placeholder="거래처명" class="form-control"></div>
-            
-            <input type="hidden" id="location" value="">
             
             <div class="form-group"><label>형태</label><select id="payType" class="form-control"><option value="카드영수증">카드영수증</option><option value="계산서발행">계산서발행</option><option value="송금">송금</option><option value="현금">현금</option></select></div>
             <div class="form-group"><label>카드번호</label><input type="text" id="cardNo" placeholder="번호 (4자리)" class="form-control"></div>
@@ -146,250 +171,376 @@
 
 <div id="imageModal" class="modal" onclick="this.style.display='none'">
     <div class="close-modal">&times;</div>
-    <img class="modal-content" id="modalImg">
+    <img class="modal-image-content" id="modalImg">
+</div>
+
+<div id="settingModal" class="modal">
+    <div class="setting-modal-content">
+        <div class="setting-modal-header">
+            <span id="settingModalTitle">항목 관리</span>
+            <span style="cursor:pointer; font-size:24px;" onclick="closeSettingModal()">&times;</span>
+        </div>
+        <div class="setting-input-group">
+            <input type="text" id="newSettingItem" class="form-control" placeholder="새 항목 입력">
+            <button class="btn btn-refresh" onclick="addSettingItem()" style="white-space:nowrap;">추가</button>
+        </div>
+        <div class="setting-list" id="settingListArea"></div>
+        <button class="btn-close-setting" onclick="closeSettingModal()">닫기</button>
+    </div>
 </div>
 
 <script>
-    const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec";
+const SERVER_URL = "https://script.google.com/macros/s/AKfycbxAbo6PtrKdVUVY5Vy9hEtC7d5U51kYchvGesrq7OkxKe84JmQxeTESh84UITFFOI_x/exec";
 
-    let db = [];
-    let currentImgBase64 = null;
-    let isEditing = false;
-    let editId = null;
+let db = [];
+let currentImgBase64 = null;
+let isEditing = false;
+let editId = null;
+let currentSettingTarget = ''; 
 
-    window.onload = function() {
-        document.getElementById('date').valueAsDate = new Date();
-        loadData();
+let defaultOptions = {
+    item: ['Novacast', 'AP&T', 'IDRA'],
+    user: ['홍길동', '김철수', '이영희']
+};
+
+window.onload = function() {
+    document.getElementById('date').valueAsDate = new Date();
+    initSelectOptions();
+    loadData();
+};
+
+// 안전한 날짜 포맷팅 변환 함수 (누락되어 복원함)
+function getSafeDate(dateStr) {
+    if(!dateStr) return { full: "", short: "" };
+    const d = new Date(dateStr);
+    if(isNaN(d.getTime())) return { full: "", short: "" };
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return {
+        full: `${year}-${month}-${day}`, 
+        short: `${month}-${day}`         
+    };
+}
+
+function initSelectOptions() {
+    ['item', 'user'].forEach(target => {
+        let options = localStorage.getItem('setting_' + target);
+        if (!options) {
+            options = defaultOptions[target];
+            options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+            localStorage.setItem('setting_' + target, JSON.stringify(options));
+        } else {
+            options = JSON.parse(options);
+            options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+        }
+        updateSelectUI(target, options);
+    });
+}
+
+function updateSelectUI(target, options) {
+    const selectEl = document.getElementById(target);
+    selectEl.innerHTML = '';
+    options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.innerText = opt;
+        selectEl.appendChild(el);
+    });
+}
+
+function openSettingModal(target) {
+    currentSettingTarget = target;
+    const titleText = target === 'item' ? '⚙️ 파트너사 편집' : '⚙️ 사용자 편집';
+    document.getElementById('settingModalTitle').innerText = titleText;
+    document.getElementById('newSettingItem').value = '';
+    document.getElementById('settingModal').style.display = 'flex';
+    renderSettingList();
+}
+
+function closeSettingModal() {
+    document.getElementById('settingModal').style.display = 'none';
+    initSelectOptions(); 
+}
+
+function renderSettingList() {
+    const listArea = document.getElementById('settingListArea');
+    listArea.innerHTML = '';
+    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
+    
+    options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+    
+    if(options.length === 0) {
+        listArea.innerHTML = `<div style="padding:15px; color:#999; text-align:center;">등록된 항목이 없습니다.</div>`;
+        return;
+    }
+
+    options.forEach((opt, idx) => {
+        const div = document.createElement('div');
+        div.className = 'setting-item';
+        div.innerHTML = `
+            <span>${opt}</span>
+            <button class="btn-item-del" onclick="deleteSettingItem(${idx})">&times;</button>
+        `;
+        listArea.appendChild(div);
+    });
+}
+
+function addSettingItem() {
+    const input = document.getElementById('newSettingItem');
+    const value = input.value.trim();
+    if(!value) { alert('내용을 입력해주세요.'); return; }
+    
+    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
+    if(options.includes(value)) { alert('이미 존재하는 항목입니다.'); return; }
+    
+    options.push(value);
+    options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+    
+    localStorage.setItem('setting_' + currentSettingTarget, JSON.stringify(options));
+    input.value = '';
+    renderSettingList();
+}
+
+function deleteSettingItem(index) {
+    if(!confirm('해당 항목을 삭제하시겠습니까?')) return;
+    let options = JSON.parse(localStorage.getItem('setting_' + currentSettingTarget)) || [];
+    options.sort((a, b) => a.localeCompare(b, 'ko', { sensitivity: 'base' }));
+    options.splice(index, 1);
+    localStorage.setItem('setting_' + currentSettingTarget, JSON.stringify(options));
+    renderSettingList();
+}
+
+function loadData() {
+    if(SERVER_URL.includes("여기에")) { alert("URL 주소를 확인해주세요."); return; }
+    showLoader(true);
+    fetch(SERVER_URL + "?action=read")
+    .then(res => res.json())
+    .then(data => {
+        db = data;
+        db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); 
+        renderTable();
+        showLoader(false);
+    })
+    .catch(err => { alert("로드 실패: " + err); showLoader(false); });
+}
+
+function submitData() {
+    const date = document.getElementById('date').value;
+    const amount = document.getElementById('amount').value;
+    const item = document.getElementById('item').value;
+
+    if(!date || !amount || !item) { alert("날짜, 파트너사, 금액은 필수입니다."); return; }
+
+    const entry = {
+        id: isEditing ? editId : Date.now(),
+        date: date,
+        moneyType: document.getElementById('moneyType').value,
+        amount: amount,
+        user: document.getElementById('user').value,
+        item: item,
+        client: document.getElementById('client').value,
+        payType: document.getElementById('payType').value,
+        cardNo: document.getElementById('cardNo').value,
+        detail: document.getElementById('detail').value, 
+        img: currentImgBase64
     };
 
-    function loadData() {
-        if(SERVER_URL.includes("여기에")) { alert("URL 주소를 확인해주세요."); return; }
-        showLoader(true);
-        fetch(SERVER_URL + "?action=read")
-        .then(res => res.json())
-        .then(data => {
-            db = data;
-            db.sort((a,b) => new Date(b.날짜) - new Date(a.날짜)); 
-            renderTable();
-            showLoader(false);
-        })
-        .catch(err => { alert("로드 실패: " + err); showLoader(false); });
-    }
+    const url = isEditing ? (SERVER_URL + "?action=update") : SERVER_URL;
 
-    function getSafeDate(dateStr) {
-        if(!dateStr) return { full: "", short: "" };
-        const d = new Date(dateStr);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+    showLoader(true);
+    fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry)
+    })
+    .then(() => {
+        alert(isEditing ? "✅ 수정되었습니다." : "✅ 등록되었습니다.");
+        cancelEdit();
+        loadData();
+    })
+    .catch(err => { alert("오류: " + err); showLoader(false); });
+}
+
+function editRow(id) {
+    const entry = db.find(row => row.ID == id);
+    if(!entry) return;
+
+    isEditing = true;
+    editId = id;
+
+    document.getElementById('date').value = getSafeDate(entry.날짜).full;
+    document.getElementById('moneyType').value = entry.구분;
+    document.getElementById('amount').value = entry.금액;
+    document.getElementById('client').value = entry.고객사;
+    document.getElementById('payType').value = entry.형태;
+    document.getElementById('cardNo').value = entry.카드번호;
+    document.getElementById('detail').value = entry.상세내용; 
+
+    ['item', 'user'].forEach(target => {
+        const selectEl = document.getElementById(target);
+        const sheetValue = target === 'item' ? entry.아이템 : entry.사용자;
         
-        return {
-            full: `${year}-${month}-${day}`, 
-            short: `${month}-${day}`         
-        };
-    }
-
-    function submitData() {
-        const date = document.getElementById('date').value;
-        const amount = document.getElementById('amount').value;
-        const item = document.getElementById('item').value;
-
-        if(!date || !amount || !item) { alert("날짜, 파트너사, 금액은 필수입니다."); return; }
-
-        const entry = {
-            id: isEditing ? editId : Date.now(),
-            date: date,
-            moneyType: document.getElementById('moneyType').value,
-            amount: amount,
-            user: document.getElementById('user').value,
-            item: item,
-            client: document.getElementById('client').value,
-            location: "", 
-            payType: document.getElementById('payType').value,
-            cardNo: document.getElementById('cardNo').value,
-            detail: document.getElementById('detail').value, 
-            img: currentImgBase64
-        };
-
-        const url = isEditing ? (SERVER_URL + "?action=update") : SERVER_URL;
-
-        showLoader(true);
-        fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(entry)
-        })
-        .then(() => {
-            alert(isEditing ? "✅ 수정되었습니다." : "✅ 등록되었습니다.");
-            cancelEdit();
-            loadData();
-        })
-        .catch(err => { alert("오류: " + err); showLoader(false); });
-    }
-
-    function editRow(id) {
-        const item = db.find(row => row.ID == id);
-        if(!item) return;
-
-        isEditing = true;
-        editId = id;
-
-        document.getElementById('date').value = getSafeDate(item.날짜).full;
-        document.getElementById('moneyType').value = item.구분;
-        document.getElementById('amount').value = item.금액;
-        document.getElementById('user').value = item.사용자;
-        document.getElementById('item').value = item.아이템; 
-        document.getElementById('detail').value = item.상세내용; 
-        document.getElementById('client').value = item.고객사;
-        document.getElementById('location').value = ""; 
-        document.getElementById('payType').value = item.형태;
-        document.getElementById('cardNo').value = item.카드번호;
-
-        document.getElementById('formTitle').innerText = "✏️ 내역 수정 중";
-        document.getElementById('formTitle').style.color = "#e67e22";
-        document.getElementById('btnSubmit').innerText = "수정 완료";
-        document.getElementById('btnSubmit').classList.add('editing');
-        document.getElementById('btnCancel').style.display = 'block';
+        let exists = false;
+        for(let i=0; i<selectEl.options.length; i++) {
+            if(selectEl.options[i].value === sheetValue) { exists = true; break; }
+        }
         
-        document.getElementById('btnCamOnly').innerText = "📷 촬영 변경";
-        document.getElementById('btnGalOnly').innerText = "📁 사진 변경";
+        if(!exists && sheetValue) {
+            const opt = document.createElement('option');
+            opt.value = sheetValue;
+            opt.innerText = sheetValue;
+            selectEl.appendChild(opt);
+        }
+        selectEl.value = sheetValue;
+    });
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    document.getElementById('formTitle').innerText = "✏️ 내역 수정 중";
+    document.getElementById('formTitle').style.color = "#e67e22";
+    document.getElementById('btnSubmit').innerText = "수정 완료";
+    document.getElementById('btnSubmit').classList.add('editing');
+    document.getElementById('btnCancel').style.display = 'block';
+    
+    document.getElementById('btnCamOnly').innerText = "📷 촬영 변경";
+    document.getElementById('btnGalOnly').innerText = "📁 사진 변경";
 
-    function cancelEdit() {
-        isEditing = false;
-        editId = null;
-        currentImgBase64 = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+    isEditing = false;
+    editId = null;
+    currentImgBase64 = null;
+    
+    const ids = ['amount', 'detail', 'client', 'cardNo'];
+    ids.forEach(id => document.getElementById(id).value = '');
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('payType').value = '카드영수증';
+    
+    initSelectOptions(); 
+    clearImg();
+
+    document.getElementById('formTitle').innerText = "📝 신규 등록";
+    document.getElementById('formTitle').style.color = "#2c3e50";
+    document.getElementById('btnSubmit').innerText = "등록하기";
+    document.getElementById('btnSubmit').classList.remove('editing');
+    document.getElementById('btnCancel').style.display = 'none';
+}
+
+function delEntry(id) {
+    if(!confirm("정말 삭제하시겠습니까?")) return;
+    showLoader(true);
+    fetch(SERVER_URL + "?action=delete&id=" + id)
+    .then(res => res.json())
+    .then(() => { alert("삭제되었습니다."); loadData(); })
+    .catch(() => { alert("오류"); showLoader(false); });
+}
+
+function renderTable() {
+    const tbody = document.querySelector('#dataTable tbody');
+    tbody.innerHTML = '';
+
+    db.forEach(item => {
+        const val = parseInt(item.금액).toLocaleString();
+        const dateShort = getSafeDate(item.날짜).short; 
+        const typeClass = item.구분 === 'sales' ? 'col-sales' : 'col-exp';
+        const clientName = item.고객사 || '-';
         
-        const ids = ['amount', 'item', 'detail', 'user', 'client', 'location', 'cardNo'];
-        ids.forEach(id => document.getElementById(id).value = '');
-        document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('payType').value = '카드영수증';
-        
-        clearImg();
-
-        document.getElementById('formTitle').innerText = "📝 신규 등록";
-        document.getElementById('formTitle').style.color = "#2c3e50";
-        document.getElementById('btnSubmit').innerText = "등록하기";
-        document.getElementById('btnSubmit').classList.remove('editing');
-        document.getElementById('btnCancel').style.display = 'none';
-    }
-
-    function delEntry(id) {
-        if(!confirm("정말 삭제하시겠습니까?")) return;
-        showLoader(true);
-        fetch(SERVER_URL + "?action=delete&id=" + id)
-        .then(res => res.json())
-        .then(() => { alert("삭제되었습니다."); loadData(); })
-        .catch(() => { alert("오류"); showLoader(false); });
-    }
-
-    function renderTable() {
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-
-        db.forEach(item => {
-            const val = parseInt(item.금액).toLocaleString();
-            const dateShort = getSafeDate(item.날짜).short; 
-            const typeClass = item.구분 === 'sales' ? 'col-sales' : 'col-exp';
-            const clientName = item.고객사 || '-';
-            
-            let imgBtn = `<span style="color:#ccc">-</span>`;
-            if(item.이미지URL && item.이미지URL.includes('drive.google.com')) {
-                const idMatch = item.imagesURL ? null : item.이미지URL.match(/id=([^&]+)/);
-                if(idMatch) {
-                    const thumb = `https://drive.google.com/thumbnail?sz=w1000&id=${idMatch[1]}`;
-                    imgBtn = `<a href="#" class="receipt-btn" onclick="openImageModal('${thumb}')">보기</a>`;
-                }
+        let imgBtn = `<span style="color:#ccc">-</span>`;
+        if(item.이미지URL && item.이미지URL.includes('drive.google.com')) {
+            const idMatch = item.imagesURL ? null : item.이미지URL.match(/id=([^&]+)/);
+            if(idMatch) {
+                const thumb = `https://drive.google.com/thumbnail?sz=w1000&id=${idMatch[1]}`;
+                imgBtn = `<a href="#" class="receipt-btn" onclick="openImageModal('${thumb}')">보기</a>`;
             }
+        }
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${dateShort}</td>
-                <td>${item.아이템}<br><span style="font-size:11px; color:#888">${item.사용자}</span></td>
-                <td class="${typeClass}">${val}</td>
-                <td style="font-size:12px;">${clientName}</td>
-                <td>${imgBtn}</td>
-                <td class="actions">
-                    <button class="btn btn-edit" onclick="editRow('${item.ID}')">수정</button>
-                    <button class="btn btn-del" onclick="delEntry('${item.ID}')">삭제</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${dateShort}</td>
+            <td>${item.아이템}<br><span style="font-size:11px; color:#888">${item.사용자}</span></td>
+            <td class="${typeClass}">${val}</td>
+            <td style="font-size:12px;">${clientName}</td>
+            <td>${imgBtn}</td>
+            <td class="actions">
+                <button class="btn btn-edit" onclick="editRow('${item.ID}')">수정</button>
+                <button class="btn btn-del" onclick="delEntry('${item.ID}')">삭제</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
-    function handleFile(input) {
-        if(input.files && input.files[0]) {
-            showLoader(true);
-            const file = input.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const cvs = document.createElement('canvas');
-                    const ctx = cvs.getContext('2d');
-                    
-                    const maxW = 800;
-                    let w = img.width;
-                    let h = img.height;
-                    
-                    if(w > maxW) { 
-                        h = Math.round(h * (maxW / w)); 
-                        w = maxW; 
-                    }
-                    
-                    cvs.width = w; 
-                    cvs.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-                    
-                    currentImgBase64 = cvs.toDataURL('image/jpeg', 0.6);
-                    
-                    document.getElementById('preview-img').src = currentImgBase64;
-                    document.getElementById('preview-area').style.display = 'block';
-                    
-                    // 두 버튼 모두 활성화 시각적 피드백 처리
-                    document.getElementById('btnCamOnly').classList.add('active');
-                    document.getElementById('btnGalOnly').classList.add('active');
-                    document.getElementById('btnCamOnly').innerText = "✅ 사진 준비됨";
-                    document.getElementById('btnGalOnly').innerText = "✅ 사진 준비됨";
-                    showLoader(false);
-                };
+function handleFile(input) {
+    if(input.files && input.files[0]) {
+        showLoader(true);
+        const file = input.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const cvs = document.createElement('canvas');
+                const ctx = cvs.getContext('2d');
                 
-                img.onerror = function() {
-                    alert("이미지를 읽어오는데 실패했습니다. 다른 사진을 선택해 보세요.");
-                    showLoader(false);
-                };
+                const maxW = 800;
+                let w = img.width;
+                let h = img.height;
                 
-                img.src = e.target.result;
-            };
-            
-            reader.onerror = function() {
-                alert("파일 읽기 오류가 발생했습니다.");
+                if(w > maxW) { 
+                    h = Math.round(h * (maxW / w)); 
+                    w = maxW; 
+                }
+                
+                cvs.width = w; 
+                cvs.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                currentImgBase64 = cvs.toDataURL('image/jpeg', 0.6);
+                
+                document.getElementById('preview-img').src = currentImgBase64;
+                document.getElementById('preview-area').style.display = 'block';
+                
+                document.getElementById('btnCamOnly').classList.add('active');
+                document.getElementById('btnGalOnly').classList.add('active');
+                document.getElementById('btnCamOnly').innerText = "✅ 사진 준비됨";
+                document.getElementById('btnGalOnly').innerText = "✅ 사진 준비됨";
                 showLoader(false);
             };
             
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function clearImg() {
-        currentImgBase64 = null;
-        document.getElementById('preview-area').style.display = 'none';
-        document.getElementById('cameraInput').value = '';
-        document.getElementById('galleryInput').value = '';
+            img.onerror = function() {
+                alert("이미지를 읽어오는데 실패했습니다. 다른 사진을 선택해 보세요.");
+                showLoader(false);
+            };
+            
+            img.src = e.target.result;
+        };
         
-        document.getElementById('btnCamOnly').classList.remove('active');
-        document.getElementById('btnGalOnly').classList.remove('active');
+        reader.onerror = function() {
+            alert("파일 읽기 오류가 발생했습니다.");
+            showLoader(false);
+        };
         
-        document.getElementById('btnCamOnly').innerText = isEditing ? "📷 촬영 변경" : "📷 즉시 카메라 촬영";
-        document.getElementById('btnGalOnly').innerText = isEditing ? "📁 사진 변경" : "📁 갤러리 사진 선택";
+        reader.readAsDataURL(file);
     }
+}
 
-    function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+function clearImg() {
+    currentImgBase64 = null;
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('galleryInput').value = '';
+    
+    document.getElementById('btnCamOnly').classList.remove('active');
+    document.getElementById('btnGalOnly').classList.remove('active');
+    
+    document.getElementById('btnCamOnly').innerText = isEditing ? "📷 촬영 변경" : "📷 즉시 카메라 촬영";
+    document.getElementById('btnGalOnly').innerText = isEditing ? "📁 사진 변경" : "📁 갤러리 사진 선택";
+}
+
+function showLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
     function openImageModal(url) { 
         document.getElementById('imageModal').style.display = 'flex'; 
         document.getElementById('modalImg').src = url; 
